@@ -60,3 +60,14 @@ htmlcov/
 
 # ==== Mac / Windows system files ====
 Thumbs.db
+build/
+.android/
+.ios/
+.macos/
+linux/
+windows/
+web/
+pubspec.lock
+.dart_tool/
+.gradle/
+
