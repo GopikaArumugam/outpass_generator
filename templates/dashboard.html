@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Approver Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f3f4f6, #e2e8f0); /* Light gray gradient background */
+      font-family: 'Segoe UI', sans-serif;
+      margin-bottom: 70px;
+      color: #2f3542; /* Dark gray for text */
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 25px;
+      background: linear-gradient(135deg, #667eea, #764ba2); /* Blue-purple gradient */
+      border-bottom: 2px solid #dfe4ea;
+      position: fixed;
+      width: 100%;
+      left: 0;
+      top: 0;
+      z-index: 999;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      color: white; /* White text for contrast */
+    }
+
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(135deg, #667eea, #764ba2); /* Blue-purple gradient */
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 10px 0;
+      z-index: 999;
+      box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .bottom-bar a {
+      color: #ffffff; /* White text */
+      text-decoration: none;
+      padding: 10px;
+      text-align: center;
+      flex-grow: 1;
+      font-weight: 500;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .bottom-bar a:hover,
+    .bottom-bar a.active {
+      background-color: #5a67d8; /* Slightly darker blue for hover/active */
+      border-radius: 10px;
+      transform: scale(1.1); /* Slight zoom effect */
+    }
+
+    .avatar {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ffffff; /* White border for contrast */
+    }
+
+    .content-wrapper {
+      padding-top: 90px;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    .tab-content > div {
+      display: none;
+      padding: 20px;
+      background: white; /* Clean white background */
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    }
+
+    .tab-content > div.active {
+      display: block;
+      animation: slideFadeIn 0.6s ease forwards;
+    }
+
+    @keyframes slideFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h4 {
+      color: #34495e; /* Darker gray for headings */
+      font-weight: bold;
+    }
+
+    p {
+      color: #576574; /* Medium gray for text */
+    }
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <h5>Welcome, <strong>Approver {{ session['username'] }}</strong></h5>
+  <div>
+    <img src="https://i.pravatar.cc/300" alt="avatar" class="avatar">
+  </div>
+</div>
+
+<div class="content-wrapper">
+  <div class="tab-content">
+    <!-- Pending Requests -->
+    <div id="pending" class="active">
+      <h4>📨 Pending Requests</h4>
+      {% if pending_requests %}
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Roll Number</th>
+              <th>Leave Time</th>
+              <th>Return Time</th>
+              <th>Reason</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for request in pending_requests %}
+              <tr>
+                <td>{{ request.student_name }}</td>
+                <td>{{ request.roll_number }}</td>
+                <td>{{ request.leave_time }}</td>
+                <td>{{ request.return_time }}</td>
+                <td>{{ request.reason }}</td>
+                <td>{{ request.status }}</td>
+                <td>
+                  <form action="{{ url_for('process_outpass', outpass_id=request._id) }}" method="POST" style="display:inline;">
+                    <input type="hidden" name="action" value="Accepted">
+                    <button type="submit" class="btn btn-success">Accept</button>
+                  </form>
+                  <form action="{{ url_for('process_outpass', outpass_id=request._id) }}" method="POST" style="display:inline;">
+                    <input type="hidden" name="action" value="Rejected">
+                    <button type="submit" class="btn btn-danger">Reject</button>
+                  </form>
+                  <form action="{{ url_for('process_outpass', outpass_id=request._id) }}" method="POST" style="display:inline;">
+                    <input type="hidden" name="action" value="Meet in Person">
+                    <button type="submit" class="btn btn-warning">Meet in Person</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No pending requests at the moment.</p>
+      {% endif %}
+    </div>
+
+    <!-- Emergency Requests -->
+    <div id="emergency">
+      <h4>🚨 Emergency Requests</h4>
+      {% if emergency_requests %}
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Roll Number</th>
+              <th>Leave Time</th>
+              <th>Return Time</th>
+              <th>Reason</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for request in emergency_requests %}
+              <tr>
+                <td>{{ request.student_name }}</td>
+                <td>{{ request.roll_number }}</td>
+                <td>{{ request.leave_time }}</td>
+                <td>{{ request.return_time }}</td>
+                <td>{{ request.reason }}</td>
+                <td>{{ request.status }}</td>
+                <td>
+                  <form action="{{ url_for('process_outpass', outpass_id=request._id) }}" method="POST" style="display:inline;">
+                    <input type="hidden" name="action" value="Accepted">
+                    <button type="submit" class="btn btn-success">Accept</button>
+                  </form>
+                  <form action="{{ url_for('process_outpass', outpass_id=request._id) }}" method="POST" style="display:inline;">
+                    <input type="hidden" name="action" value="Rejected">
+                    <button type="submit" class="btn btn-danger">Reject</button>
+                  </form>
+                  <form action="{{ url_for('process_outpass', outpass_id=request._id) }}" method="POST" style="display:inline;">
+                    <input type="hidden" name="action" value="Meet in Person">
+                    <button type="submit" class="btn btn-warning">Meet in Person</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No emergency requests at the moment.</p>
+      {% endif %}
+    </div>
+
+    <!-- Accepted Requests -->
+    <div id="accepted">
+      <h4>✅ Previously Accepted Requests</h4>
+      {% if accepted_requests %}
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Roll Number</th>
+              <th>Leave Time</th>
+              <th>Return Time</th>
+              <th>Reason</th>
+              <th>Status</th> <!-- Add Status Column -->
+            </tr>
+          </thead>
+          <tbody>
+            {% for request in accepted_requests %}
+              <tr>
+                <td>{{ request.student_name }}</td>
+                <td>{{ request.roll_number }}</td>
+                <td>{{ request.leave_time }}</td>
+                <td>{{ request.return_time }}</td>
+                <td>{{ request.reason }}</td>
+                <td>{{ request.status }}</td> <!-- Display Status -->
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No accepted requests at the moment.</p>
+      {% endif %}
+    </div>
+    <div id="irregular">
+      <h4>📅 Irregular Logs</h4>
+      {% if irregular_logs %}
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Roll Number</th>
+              <th>Leave Time</th>
+              <th>Return Time</th>
+              <th>Reason</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in irregular_logs %}
+              <tr>
+                <td>{{ log.student_name }}</td>
+                <td>{{ log.roll_number }}</td>
+                <td>{{ log.leave_time }}</td>
+                <td>{{ log.return_time }}</td>
+                <td>{{ log.reason }}</td>
+                <td>{{ log.status }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No irregular logs found.</p>
+      {% endif %}
+    </div>
+    
+  </div>
+  <!-- Irregular Logs -->
+  
+</div>
+
+
+
+<div class="bottom-bar">
+  <a href="#" class="active" onclick="showTab('pending')"><i class="fas fa-inbox"></i><br>Pending</a>
+  <a href="#" onclick="showTab('emergency')"><i class="fas fa-exclamation-triangle"></i><br>Emergency</a>
+  <a href="#" onclick="showTab('accepted')"><i class="fas fa-check-circle"></i><br>Accepted</a>
+  <a href="#" onclick="showTab('irregular')"><i class="fas fa-calendar-times"></i><br>Irregular Logs</a>
+</div>
+
+<script>
+  function showTab(id) {
+    const tabs = document.querySelectorAll('.tab-content > div');
+    tabs.forEach(div => {
+      div.classList.remove('active');
+    });
+    document.getElementById(id).classList.add('active');
+
+    const links = document.querySelectorAll('.bottom-bar a');
+    links.forEach(link => {
+      link.classList.remove('active');
+    });
+    document.querySelector(`.bottom-bar a[onclick*='${id}']`).classList.add('active');
+  }
+</script>
+</body>
+</html>

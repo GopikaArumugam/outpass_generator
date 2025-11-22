@@ -1,0 +1,14 @@
+Flask>=2.0
+pymongo>=4.0
+python-dateutil>=2.8
+pytz
+qrcode
+Pillow
+Flask-Mail
+sendgrid
+opencv-python
+face-recognition
+dlib
+python-dotenv
+bcrypt
+gunicorn

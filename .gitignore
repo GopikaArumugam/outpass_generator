@@ -1,0 +1,62 @@
+# ==== Python ====
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.egg
+build/
+dist/
+
+# Virtual environment
+venv/
+env/
+.envi/
+.envi/
+.envi/*
+envi/
+
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+*$py.class
+
+# ==== Flask ====
+instance/
+*.db
+*.sqlite3
+
+# ==== Environment / Secrets ====
+.env
+.env.* 
+!.env.example
+
+# ==== Logs ====
+*.log
+
+# ==== IDE / Editor files ====
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# ==== Static generated files ====
+static/qr_codes/
+uploads/
+
+# ==== Models (optional: use Git LFS if needed) ====
+models/
+*.h5
+*.pth
+*.pt
+*.onnx
+*.tflite
+
+# ==== Test caches ====
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ==== Mac / Windows system files ====
+Thumbs.db
