@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Security | Outpass Verification</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f4f6fc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding-top: 80px;
+    }
+
+    .main-header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background-color: #7a4edf;
+      color: white;
+      text-align: center;
+      padding: 20px 0;
+      font-size: 24px;
+      font-weight: 600;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    }
+
+    .security-container {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 450px;
+    }
+
+    video, canvas {
+      width: 100%;
+      border-radius: 12px;
+      margin-top: 20px;
+    }
+
+    video {
+      background: url('https://cdn-icons-png.flaticon.com/512/747/747376.png') center center no-repeat;
+      background-size: 60px;
+      background-color: #dfe3f0;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      font-weight: 600;
+      background-color: #4e73df;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2e59d9;
+    }
+
+    button:disabled {
+      background-color: #9cb3f0;
+      cursor: not-allowed;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .status-green {
+      color: green;
+    }
+
+    .status-red {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="main-header">
+    <h1>Exitease Security Dashboard</h1>
+  </header>
+
+  <div class="security-container">
+    <h2>Student Verification</h2>
+
+    <video id="video" autoplay></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <!-- Add this next to the Capture & Verify button -->
+<div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
+  <button id="verify-btn" onclick="capture()">Capture & Verify</button>
+  <button id="toggle-camera-btn" onclick="toggleCamera()">Turn Off Camera</button>
+</div>
+
+
+    <p id="status">Waiting for verification...</p>
+  </div>
+
+  <script>
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const statusText = document.getElementById('status');
+  const button = document.getElementById('verify-btn');
+
+  let cameraOn = true;
+  let streamRef = null;
+
+  // Only this block is needed to start the camera
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+      streamRef = stream;
+      video.srcObject = stream;
+    })
+    .catch(err => {
+      console.error("Camera error: ", err);
+      statusText.innerText = 'Unable to access camera';
+      statusText.className = 'status-red';
+    });
+
+  function toggleCamera() {
+    if (cameraOn) {
+      streamRef?.getTracks().forEach(track => track.stop());
+      video.srcObject = null;
+      document.getElementById('toggle-camera-btn').innerText = 'Turn On Camera';
+      statusText.innerText = 'Camera is off';
+      statusText.className = 'status-red';
+    } else {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          streamRef = stream;
+          video.srcObject = stream;
+          document.getElementById('toggle-camera-btn').innerText = 'Turn Off Camera';
+          statusText.innerText = 'Camera is on';
+          statusText.className = '';
+        })
+        .catch(err => {
+          console.error("Camera error: ", err);
+          statusText.innerText = 'Unable to turn on camera';
+          statusText.className = 'status-red';
+        });
+    }
+    cameraOn = !cameraOn;
+  }
+
+    function capture() {
+      button.disabled = true;
+      statusText.innerText = 'Verifying...';
+      statusText.className = '';
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(sendImageToBackend, 'image/jpeg');
+    }
+
+    function sendImageToBackend(blob) {
+      const formData = new FormData();
+      formData.append('photo', blob, 'student.jpg');
+
+      fetch('/verify-student', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        button.disabled = false;
+        if (data.status === 'allowed') {
+          statusText.innerText = `Verified: ${data.roll_number} - On time`;
+          statusText.className = 'status-green';
+        } else if (data.status === 'flagged') {
+          statusText.innerText = `Flagged: ${data.roll_number} - Timing Violation`;
+          statusText.className = 'status-red';
+        } else {
+          statusText.innerText = `Error: ${data.message}`;
+          statusText.className = 'status-red';
+        }
+      })
+      .catch(err => {
+        button.disabled = false;
+        console.error(err);
+        statusText.innerText = 'Error during verification';
+        statusText.className = 'status-red';
+      });
+    }
+
+    // Stop camera when navigating away
+    window.addEventListener("beforeunload", () => {
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+      }
+    });
+  </script>
+</body>
+</html>

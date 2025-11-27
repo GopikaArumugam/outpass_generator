@@ -1,0 +1,97 @@
+[{
+  "_id": {
+    "$oid": "681347d216d9e4a687edd96d"
+  },
+  "name": "Gayathri N",
+  "username": "gayathri_n",
+  "password": "Gayathri@2024",
+  "mail": "gayathri.n@college.edu",
+  "role": "Advisor",
+  "year": "II",
+  "dept": "AIML"
+},
+{
+  "_id": {
+    "$oid": "681347f616d9e4a687edd96e"
+  },
+  "name": "Hemalatha S",
+  "username": "hemalatha_s",
+  "password": "hod@2024",
+  "mail": "hemalatha.s@college.edu",
+  "role": "HOD",
+  "dept": "AIML"
+},
+{
+  "_id": {
+    "$oid": "6813480e16d9e4a687edd96f"
+  },
+  "name": "Sabitha",
+  "username": "sabitha",
+  "password": "warden@2024",
+  "mail": "sabitha@college.edu",
+  "role": "Warden",
+  "room_number_range": "201-220"
+},
+{
+  "_id": {
+    "$oid": "681c61885aa8f9f45aecf62b"
+  },
+  "name": "sec_name",
+  "username": "security",
+  "password": "sec@2024",
+  "role": "security"
+},
+{
+  "_id": {
+    "$oid": "605c72ef1532073e8d2f8e5f"
+  },
+  "name": "GOPIKA A S",
+  "username": "AML_230014",
+  "password": "Gopi@24",
+  "role": "student",
+  "roll_number": "23AM014",
+  "reg_number": "714023247014",
+  "year": "II",
+  "dept": "AIML",
+  "parent_number": "9789187415",
+  "hosteller_or_dayscholar": "Hosteller",
+  "room_number": 203,
+  "bus_number": null,
+  "mail": "gopika.arumugm@gmail.com"
+},
+{
+  "_id": {
+    "$oid": "68665ebb07f3780a6631a5d5"
+  },
+  "name": "NEHA S",
+  "username": "AML_230054",
+  "password": "Neha@10",
+  "role": "student",
+  "roll_number": "23AM054",
+  "reg_number": "714023247054",
+  "year": "II",
+  "dept": "AIML",
+  "parent_number": "9345741933",
+  "hosteller_or_dayscholar": "Hosteller",
+  "room_number": 201,
+  "bus_number": null,
+  "mail": "giri2006priyan@gmail.com"
+},
+{
+  "_id": {
+    "$oid": "686f5bb838da225ba28f685e"
+  },
+  "name": "ATHULYA A M",
+  "username": "AML_230008",
+  "password": "Attu@10",
+  "role": "student",
+  "roll_number": "23AM008",
+  "reg_number": "714023247008",
+  "year": "II",
+  "dept": "AIML",
+  "parent_number": "8610980910",
+  "hosteller_or_dayscholar": "dayscholar",
+  "room_number": null,
+  "bus_number": 12,
+  "mail": "gopikaas.aml@gmail.com"
+}]

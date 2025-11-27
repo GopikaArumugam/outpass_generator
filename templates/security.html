@@ -2,207 +2,487 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Security | Outpass Verification</title>
+  <title>ExitEase | Security Panel</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
   <style>
     body {
       font-family: 'Poppins', sans-serif;
-      background-color: #f4f6fc;
+      background: #f4f6fc;
+      margin: 0;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .main-content {
+      flex: 1;
+      background: #f4f6fc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #7a4edf;
+      color: #fff;
+      padding: 18px 36px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    }
+    .topbar .title {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .topbar .datetime {
+      font-size: 16px;
+      font-weight: 500;
+      margin-left: 850px;
+    }
+    .topbar .profile {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #7a4edf;
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .dashboard-cards {
+      display: flex;
+      gap: 28px;
+      margin: 36px 36px 0 36px;
+    }
+    .card {
+      flex: 1;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 180px;
+    }
+    .card-title {
+      font-size: 16px;
+      color: #7a4edf;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .card-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #222;
+    }
+    .dashboard-main {
+      display: flex;
+      flex: 1;
+      gap: 32px;
+      margin: 28px 36px 0 36px;
+    }
+    .activity-table-section {
+      flex: 2;
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .activity-table-section h3 {
+      margin: 0 0 18px 0;
+      font-size: 18px;
+      color: #4e73df;
+      font-weight: 600;
+    }
+    table.activity-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+    table.activity-table th, table.activity-table td {
+      padding: 10px 8px;
+      text-align: left;
+    }
+    table.activity-table th {
+      color: #7a4edf;
+      font-weight: 600;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    table.activity-table td {
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .status-pass {
+      color: green;
+      font-weight: 600;
+    }
+    .status-fail {
+      color: red;
+      font-weight: 600;
+    }
+    .side-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .camera-feed-box {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+      padding: 18px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      height: 100vh;
-      margin: 0;
-      padding-top: 80px;
     }
-
-    .main-header {
-      position: fixed;
-      top: 0;
+    .camera-feed-box video, .camera-feed-box img {
       width: 100%;
-      background-color: #7a4edf;
-      color: white;
-      text-align: center;
-      padding: 20px 0;
-      font-size: 24px;
-      font-weight: 600;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      z-index: 1000;
+      max-width: 280px;
+      border-radius: 10px;
+      border: 2px solid #4e73df;
+      margin-bottom: 12px;
+      position: relative;
     }
-
-    .security-container {
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      width: 450px;
+    .detection-box {
+      position: absolute;
+      border: 2px solid #27ae60;
+      border-radius: 6px;
+      pointer-events: none;
     }
-
-    video, canvas {
+    .info-panel {
+      background: #f4f6fc;
+      border-radius: 10px;
+      padding: 14px 18px;
       width: 100%;
-      border-radius: 12px;
-      margin-top: 20px;
+      margin-top: 8px;
+      font-size: 15px;
+      color: #222;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
-
-    video {
-      background: url('https://cdn-icons-png.flaticon.com/512/747/747376.png') center center no-repeat;
-      background-size: 60px;
-      background-color: #dfe3f0;
-    }
-
-    button {
-      margin-top: 20px;
-      padding: 12px 20px;
+    .info-panel .info-label {
+      color: #7a4edf;
       font-weight: 600;
-      background-color: #4e73df;
-      color: white;
+      margin-right: 6px;
+    }
+    .bottom-status {
+      margin: 32px 36px 24px 36px;
+      display: flex;
+      gap: 32px;
+      font-size: 15px;
+      color: #222;
+    }
+    .bottom-status .status-label {
+      color: #4e73df;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+    .camera-feed-box button {
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 9px 22px;
+      border-radius: 7px;
       border: none;
-      border-radius: 8px;
+      outline: none;
+      background: #7a4edf;
+      color: #fff;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 8px rgba(122, 78, 223, 0.10);
+      transition: background 0.18s, box-shadow 0.18s, color 0.18s;
+      margin-bottom: 2px;
     }
-
-    button:hover {
-      background-color: #2e59d9;
+    .camera-feed-box button:hover, .camera-feed-box button:focus {
+      background: #4e73df;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(78, 115, 223, 0.13);
     }
-
-    button:disabled {
-      background-color: #9cb3f0;
-      cursor: not-allowed;
+    #toggle-camera-btn {
+      background: #e0e0e0;
+      color: #7a4edf;
+      margin-left: 10px;
     }
-
-    #status {
-      margin-top: 20px;
-      font-weight: 600;
-      font-size: 16px;
+    #toggle-camera-btn:hover, #toggle-camera-btn:focus {
+      background: #7a4edf;
+      color: #fff;
     }
-
-    .status-green {
-      color: green;
+    @media (max-width: 1200px) {
+      .dashboard-main { flex-direction: column; }
+      .side-panel { flex-direction: row; }
     }
-
-    .status-red {
-      color: red;
+    @media (max-width: 900px) {
+      .dashboard-cards, .dashboard-main, .bottom-status { flex-direction: column; gap: 18px; }
+      .main-content { padding: 0; }
     }
   </style>
 </head>
 <body>
-
-  <header class="main-header">
-    <h1>Exitease Security Dashboard</h1>
-  </header>
-
-  <div class="security-container">
-    <h2>Student Verification</h2>
-
-    <video id="video" autoplay></video>
-    <canvas id="canvas" style="display: none;"></canvas>
-
-    <!-- Add this next to the Capture & Verify button -->
-<div style="display: flex; justify-content: center; gap: 10px; margin-top: 20px;">
-  <button id="verify-btn" onclick="capture()">Capture & Verify</button>
-  <button id="toggle-camera-btn" onclick="toggleCamera()">Turn Off Camera</button>
-</div>
-
-
-    <p id="status">Waiting for verification...</p>
+  <div class="main-content">
+    <div class="topbar">
+      <div class="title">
+        Security Panel
+      </div>
+      <div class="datetime" id="datetime"></div>
+      <div class="profile" title="Logout">
+        <i>👤</i>
+      </div>
+    </div>
+    
+    <div class="dashboard-main">
+      <div class="activity-table-section">
+        <h3>Recent Activity</h3>
+        <table class="activity-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Reg. No.</th>
+              <th>Name</th>
+              <th>Action</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="activity-table-body">
+            
+            <!-- More rows dynamically -->
+          </tbody>
+        </table>
+      </div>
+      <div class="side-panel">
+        <div class="camera-feed-box">
+          <video id="video" autoplay style="background:#c6d1f3; border:2px solid #27ae60; border-radius:10px; width:100%; max-width:280px;"></video>
+          <canvas id="canvas" style="display:none;"></canvas>
+          <div style="margin-top:12px;">
+            <button id="verify-btn">Capture &amp; Verify</button>
+            <button id="toggle-camera-btn" style="margin-left:10px;">Turn Off Camera</button>
+          </div>
+          <div id="verify-status" style="margin-top:10px; font-weight:600;"></div>
+        </div>
+        <div class="info-panel">
+          <!-- This will be replaced by JS -->
+        </div>
+      </div>
+    </div>
+    
   </div>
-
   <script>
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
-  const statusText = document.getElementById('status');
-  const button = document.getElementById('verify-btn');
+    // Date and time updater
+    function updateDateTime() {
+      const now = new Date();
+      const options = { month: 'short', day: '2-digit', year: 'numeric' };
+      const dateStr = now.toLocaleDateString('en-US', options);
+      let hours = now.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      const mins = now.getMinutes().toString().padStart(2, '0');
+      const timeStr = `${hours}:${mins} ${ampm}`;
+      document.getElementById('datetime').textContent = `${dateStr} ${timeStr}`;
+    }
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
 
-  let cameraOn = true;
-  let streamRef = null;
+    // Camera logic
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const verifyBtn = document.getElementById('verify-btn');
+    const toggleBtn = document.getElementById('toggle-camera-btn');
+    const statusDiv = document.getElementById('verify-status');
+    let streamRef = null;
+    let cameraOn = false;
 
-  // Only this block is needed to start the camera
-  navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => {
-      streamRef = stream;
-      video.srcObject = stream;
-    })
-    .catch(err => {
-      console.error("Camera error: ", err);
-      statusText.innerText = 'Unable to access camera';
-      statusText.className = 'status-red';
-    });
-
-  function toggleCamera() {
-    if (cameraOn) {
-      streamRef?.getTracks().forEach(track => track.stop());
-      video.srcObject = null;
-      document.getElementById('toggle-camera-btn').innerText = 'Turn On Camera';
-      statusText.innerText = 'Camera is off';
-      statusText.className = 'status-red';
-    } else {
+    function startCamera() {
       navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
+        .then(function(stream) {
           streamRef = stream;
           video.srcObject = stream;
-          document.getElementById('toggle-camera-btn').innerText = 'Turn Off Camera';
-          statusText.innerText = 'Camera is on';
-          statusText.className = '';
+          video.play();
+          cameraOn = true;
+          toggleBtn.textContent = "Turn Off Camera";
         })
-        .catch(err => {
-          console.error("Camera error: ", err);
-          statusText.innerText = 'Unable to turn on camera';
-          statusText.className = 'status-red';
+        .catch(function(err) {
+          statusDiv.textContent = "Camera access denied.";
+          toggleBtn.disabled = true;
         });
     }
-    cameraOn = !cameraOn;
-  }
 
-    function capture() {
-      button.disabled = true;
-      statusText.innerText = 'Verifying...';
-      statusText.className = '';
-      const context = canvas.getContext('2d');
+    function stopCamera() {
+      if (streamRef) {
+        streamRef.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+        cameraOn = false;
+        toggleBtn.textContent = "Turn On Camera";
+      }
+    }
+
+    toggleBtn.onclick = function() {
+      if (cameraOn) {
+        stopCamera();
+      } else {
+        startCamera();
+      }
+    };
+
+    // Start camera on page load
+    startCamera();
+
+    verifyBtn.onclick = function() {
+      if (!cameraOn) {
+        statusDiv.style.color = "red";
+        statusDiv.textContent = "Camera is off!";
+        return;
+      }
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(sendImageToBackend, 'image/jpeg');
-    }
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    function sendImageToBackend(blob) {
-      const formData = new FormData();
-      formData.append('photo', blob, 'student.jpg');
+      canvas.toBlob(function(blob) {
+        const formData = new FormData();
+        formData.append('photo', blob, 'capture.jpg');
+        statusDiv.style.color = "#222";
+        statusDiv.textContent = "Verifying...";
+       
+        fetch('/verify-student', {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'allowed' || data.status === 'no_outpass') {
+            // Fetch user info from backend
+            fetch('/get-user-info', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ r_no: data.reg_number })
+            })
+            .then(res => res.json())
+            .then(info => {
+              console.log(info); // For debugging
+              const infoPanel = document.querySelector('.info-panel');
+              let allowedStatus = (info.allowed === undefined || info.allowed)
+                ? `<span style="color:green;font-weight:600;">Allowed</span>`
+                : `<span style="color:red;font-weight:600;">Not Allowed</span>`;
+              infoPanel.innerHTML = `
+                <div><span class="info-label">Name:</span> ${info.name}</div>
+                <div><span class="info-label">Reg. No.:</span> ${info.reg_number}</div>
+                <div><span class="info-label">Leave Time:</span> ${info.leave_time}</div>
+                <div><span class="info-label">Return Time:</span> ${info.return_time}</div>
+                <div><span class="info-label">Reason:</span> ${info.reason}</div>
+                <div><span class="info-label">Status:</span> ${allowedStatus}</div>
+              `;
+            });
+            // Show status as before
+            if (data.status === 'allowed') {
+              statusDiv.style.color = 'green';
+              statusDiv.textContent = `Allowed: ${data.roll_number}`;
+            } else if (data.status === 'no_outpass') {
+              statusDiv.style.color = 'orange';
+              statusDiv.textContent = `No approved outpass for ${data.roll_number}`;
+              document.querySelector('.info-panel').innerHTML = ''; // <-- Clear info panel
+            }
+          } else if (data.status === 'choose_action') {
+            statusDiv.style.color = '#4e73df';
+            statusDiv.innerHTML = `
+              ${data.message}<br>
+              <button id="entry-btn" style="margin:8px 8px 0 0;">Entry</button>
+              <button id="exit-btn" style="margin:8px 0 0 0;">Exit</button>
+            `;
+            document.getElementById('entry-btn').onclick = function() {
+              recordAction('Entry', data.reg_number);
+            };
+            document.getElementById('exit-btn').onclick = function() {
+              recordAction('Exit', data.reg_number);
+            };
+          } else if (data.status === 'error') {
+            statusDiv.style.color = 'red';
+            statusDiv.textContent = data.message;
+            document.querySelector('.info-panel').innerHTML = ''; // <-- Clear info panel
+          } else {
+            statusDiv.style.color = 'red';
+            statusDiv.textContent = data.message || 'Not recognized';
+            document.querySelector('.info-panel').innerHTML = '';
+          }
+        })
+        .catch(() => {
+          statusDiv.style.color = 'red';
+          statusDiv.textContent = "Verification failed.";
+        });
+      }, 'image/jpeg');
+    };
 
-      fetch('/verify-student', {
+    function recordAction(action, reg_number) {
+      const now = new Date();
+      fetch('/record-action', {
         method: 'POST',
-        body: formData
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          action,
+          reg_number,
+          action_time: now.toISOString().slice(0, 16).replace('T', ' ') // "YYYY-MM-DD HH:MM"
+        })
       })
       .then(res => res.json())
-      .then(data => {
-        button.disabled = false;
-        if (data.status === 'allowed') {
-          statusText.innerText = `Verified: ${data.roll_number} - On time`;
-          statusText.className = 'status-green';
-        } else if (data.status === 'flagged') {
-          statusText.innerText = `Flagged: ${data.roll_number} - Timing Violation`;
-          statusText.className = 'status-red';
-        } else {
-          statusText.innerText = `Error: ${data.message}`;
-          statusText.className = 'status-red';
+      .then(resp => {
+        statusDiv.style.color = resp.status === 'success' ? 'green' : 'red';
+        statusDiv.textContent = resp.message;
+        const infoPanel = document.querySelector('.info-panel');
+        if (resp.status === 'success') {
+          infoPanel.innerHTML = `
+            <div><span class="info-label">Name:</span> ${resp.name || ''}</div>
+            <div><span class="info-label">Roll No.:</span> ${resp.roll_number || ''}</div>
+            <div><span class="info-label">Leave Time:</span> ${resp.leave_time || ''}</div>
+            <div><span class="info-label">Return Time:</span> ${resp.return_time || ''}</div>
+            <div><span class="info-label">Action Time:</span> ${resp.action_time || ''}</div>
+          `;
+          // --- Add to Recent Activity Table ---
+          const tbody = document.getElementById('activity-table-body');
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${resp.action_time || ''}</td>
+            <td>${resp.reg_number || resp.roll_number || ''}</td>
+            <td>${resp.name || ''}</td>
+            <td>${action}</td>
+            <td class="${resp.status === 'success' ? 'status-pass' : 'status-fail'}">
+              ${resp.status === 'success' ? '✅ Passed' : '❌ Failed'}
+            </td>
+          `;
+          // Add new row at the top
+          if (tbody.firstChild) {
+            tbody.insertBefore(tr, tbody.firstChild);
+          } else {
+            tbody.appendChild(tr);
+          }
+          // --- End Add to Recent Activity Table ---
+        } else if (resp.status === 'error' && resp.all_outpasses) {
+          let html = `<div><b>No valid outpass for this action time!</b></div>`;
+          resp.all_outpasses.forEach(o => {
+            html += `
+              <div style="margin-top:8px;">
+                <div><span class="info-label">Name:</span> ${o.name}</div>
+                <div><span class="info-label">Roll No.:</span> ${o.roll_number}</div>
+                <div><span class="info-label">Leave Time:</span> ${o.leave_time}</div>
+                <div><span class="info-label">Return Time:</span> ${o.return_time}</div>
+              </div>
+            `;
+          });
+          html += `<div><span class="info-label">Action Time:</span> ${resp.action_time}</div>`;
+          infoPanel.innerHTML = html;
+        } else if (resp.status === 'error') {
+          infoPanel.innerHTML = `
+            <div><span class="info-label">Name:</span> ${resp.name || ''}</div>
+            <div><span class="info-label">Roll No.:</span> ${resp.roll_number || ''}</div>
+            <div><span class="info-label">Leave Time:</span> ${resp.leave_time || ''}</div>
+            <div><span class="info-label">Return Time:</span> ${resp.return_time || ''}</div>
+            <div><span class="info-label">Action Time:</span> ${resp.action_time || ''}</div>
+          `;
         }
-      })
-      .catch(err => {
-        button.disabled = false;
-        console.error(err);
-        statusText.innerText = 'Error during verification';
-        statusText.className = 'status-red';
       });
     }
-
-    // Stop camera when navigating away
-    window.addEventListener("beforeunload", () => {
-      if (video.srcObject) {
-        video.srcObject.getTracks().forEach(track => track.stop());
-      }
-    });
   </script>
 </body>
 </html>

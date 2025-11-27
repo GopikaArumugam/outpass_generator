@@ -1,0 +1,444 @@
+<!-- Save as: templates/stud_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Exitease • Student Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg1: #d0e8ff;
+    --bg2: #f6f9ff;
+    --accent1: #7eb4ff;
+    --accent2: #558dff;
+    --glass: rgba(255,255,255,0.26);
+    --glass-strong: rgba(255,255,255,0.38);
+    --muted: #4a6b8f;
+    --green-pastel: #c6f5c3;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:"Poppins",sans-serif;
+    background: linear-gradient(135deg,var(--bg1),var(--bg2));
+    color:#072940;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    overflow-y:auto;
+  }
+
+  /* soft background orbs matching login theme */
+  .orb{
+    position: absolute;
+    border-radius:50%;
+    filter: blur(72px);
+    z-index:0;
+  }
+  .orb.a{width:300px;height:300px;left:-80px;top:-60px;background:rgba(160,200,255,0.55);animation:floatA 9s ease-in-out infinite alternate}
+  .orb.b{width:220px;height:220px;right:-60px;bottom:-90px;background:rgba(200,225,255,0.45);animation:floatB 11s ease-in-out infinite alternate}
+  .orb.c{width:160px;height:160px;left:8%;bottom:12%;background:rgba(150,190,255,0.30);animation:floatC 13s ease-in-out infinite alternate}
+  @keyframes floatA{to{transform:translate(26px,36px)}}
+  @keyframes floatB{to{transform:translate(-20px,-26px)}}
+  @keyframes floatC{to{transform:translate(18px,-20px)}}
+
+  /* top header */
+  header{
+    position: sticky;
+    top: 12px;
+    z-index:6;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    width:90%;
+    max-width:1200px;
+    margin: 16px auto;
+    padding:10px 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    border-radius:12px;
+    border:1px solid var(--glass-strong);
+    backdrop-filter: blur(10px);
+    box-shadow:0 10px 30px rgba(10,30,60,0.06);
+  }
+  .brand{
+    display:flex; gap:12px; align-items:center;
+  }
+  .logo{
+    width:44px;height:44px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));
+    box-shadow:0 6px 18px rgba(85,141,255,0.18);
+    font-size:18px;
+  }
+  .brand h1{font-size:18px;margin:0;color:#072940}
+  .brand p{margin:0;font-size:12px;color:var(--muted)}
+
+  .profile{
+    display:flex;align-items:center;gap:12px;
+  }
+  .avatar{
+    width:42px;height:42px;border-radius:10px;background:var(--glass);display:flex;align-items:center;justify-content:center;color:#072940;font-weight:700;
+    border:1px solid rgba(255,255,255,0.5);
+  }
+  .profile .name{font-weight:600;color:#072940}
+
+  /* main container */
+  .page{
+    width:90%;
+    max-width:1200px;
+    margin:28px auto;
+    position:relative;
+    z-index:2;
+    display:grid;
+    grid-template-columns: 360px 1fr;
+    gap:24px;
+    align-items:start;
+  }
+
+  /* left column (profile + calendar) */
+  .left-col { position:relative; }
+  .card{
+    background:var(--glass);
+    border-radius:14px;
+    padding:18px;
+    border:1px solid var(--glass-strong);
+    backdrop-filter: blur(10px);
+    box-shadow:0 10px 30px rgba(10,30,60,0.06);
+    margin-bottom:20px;
+  }
+
+  .student-name{font-size:18px;font-weight:700;margin-bottom:6px;color:#072940}
+  .muted{color:var(--muted);font-size:13px;margin-bottom:10px}
+
+  .info-row{display:flex;justify-content:space-between;padding:8px 6px;border-radius:8px}
+  .info-row b{color:#0f3550}
+  .info-row small{color:var(--muted)}
+
+  /* calendar */
+  .calendar {
+    margin-top:6px;
+  }
+  .cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .cal-title{font-weight:700;color:#072940}
+  .cal-controls button{border:none;background:none;cursor:pointer;font-size:18px;padding:6px 8px;border-radius:8px;color:var(--muted)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+  .cal-weekday{font-size:12px;text-align:center;color:var(--muted)}
+  .cal-day{
+    min-height:70px;padding:8px;border-radius:10px;background:rgba(255,255,255,0.85);
+    display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;
+    color:#072940;font-size:13px;
+  }
+  .cal-day.small{min-height:56px}
+  .cal-day .num{font-weight:700;margin-bottom:6px}
+  .cal-day.highlight{background:var(--green-pastel);}
+
+  /* right column: quick cards + outpass area */
+  .right-col{position:relative}
+
+  .quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:18px}
+  .quick-card{
+    padding:14px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.78));
+    display:flex;gap:12px;align-items:center;border:1px solid rgba(255,255,255,0.6);
+  }
+  .qc-icon{width:44px;height:44;border-radius:10px;background:linear-gradient(135deg,var(--accent1),var(--accent2));color:white;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .qc-body small{color:var(--muted);display:block}
+  .qc-body b{display:block;font-size:15px;color:#072940}
+
+  /* Outpass cards row */
+  .out-row{display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+  .out-card{
+    flex:1 1 30%;
+    background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.82));
+    padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.6);
+    box-shadow:0 10px 24px rgba(20,40,70,0.06);cursor:pointer;transition:transform .18s,box-shadow .18s;
+    display:flex;gap:12px;align-items:center;
+  }
+  .out-card:hover{transform:translateY(-6px);box-shadow:0 18px 44px rgba(20,40,70,0.08)}
+  .out-card .oc-icon{width:56px;height:56;border-radius:12px;background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px}
+  .out-card .oc-body b{display:block;color:#072940;font-size:15px}
+  .out-card .oc-body p{margin:4px 0 0;color:var(--muted);font-size:13px}
+
+  /* outpass history list (cards) */
+  .history-list{display:grid;gap:12px}
+  .hist-item{
+    padding:12px;border-radius:12px;background:rgba(255,255,255,0.95);display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(0,0,0,0.04);
+  }
+  .hist-left small{display:block;color:var(--muted)}
+  .badge{padding:8px 12px;border-radius:999px;font-weight:700;font-size:13px;color:white}
+  .badge.approved{background:#16a34a}
+  .badge.pending{background:#f59e0b}
+  .badge.rejected{background:#dc2626}
+
+  /* floating chat button - always top */
+  .chat-btn{
+    position:fixed;right:28px;bottom:28px;width:66px;height:66px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));color:#fff;font-size:28px;z-index:9999;box-shadow:0 12px 40px rgba(85,141,255,0.24);cursor:pointer;border:none;
+  }
+  .chat-btn:active{transform:scale(.98)}
+  .chat-label{position:fixed;right:106px;bottom:36px;background:rgba(255,255,255,0.96);padding:8px 12px;border-radius:999px;border:1px solid rgba(0,0,0,0.06);font-weight:700;color:#072940;z-index:9999;box-shadow:0 8px 24px rgba(10,30,60,0.06)}
+  
+  /* responsive */
+  @media (max-width:980px){
+    .page{grid-template-columns: 1fr; padding:18px}
+    .quick-grid{grid-template-columns:1fr 1fr}
+    .out-row{flex-direction:column}
+    .left-col, .right-col{order:unset}
+    .chat-label{display:none}
+  }
+</style>
+</head>
+<body>
+
+  <!-- soft orbs -->
+  <div class="orb a" aria-hidden="true"></div>
+  <div class="orb b" aria-hidden="true"></div>
+  <div class="orb c" aria-hidden="true"></div>
+
+  <!-- header -->
+  <header>
+    <div class="brand">
+      <div class="logo">E</div>
+      <div>
+        <h1>Exitease</h1>
+        <p>Chat-driven Outpass Management • Institute</p>
+      </div>
+    </div>
+
+    <div class="profile">
+      <div class="avatar">{{ user.name[0] if user.name }}</div>
+      <div>
+        <div class="name">{{ user.name }}</div>
+        <div class="muted" style="text-align:right;font-size:12px">{{ user.dept }} • {{ user.year }}</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- main page -->
+  <div class="page">
+
+    <!-- LEFT: profile + calendar -->
+    <div class="left-col">
+
+      <!-- student card -->
+      <div class="card">
+        <div class="student-name">{{ user.name }}</div>
+        <div class="muted">{{ user.username }} • {{ user.roll_number }}</div>
+
+        <div style="height:10px"></div>
+        <div class="info-row"><div><small>Register No</small><div><b>{{ user.reg_number }}</b></div></div></div>
+        <div class="info-row"><div><small>Year</small><div><b>{{ user.year }}</b></div></div></div>
+
+        <!-- hosteller logic: show room & warden; if dayscholar, do not show bus number -->
+        {% if user.hosteller_or_dayscholar and user.hosteller_or_dayscholar|lower == "hosteller" %}
+          <div class="info-row"><div><small>Hosteller</small><div><b>Room {{ user.room_number }}</b></div></div></div>
+          <div class="info-row"><div><small>Warden</small><div><b>{{ user.warden_name if user.warden_name else '—' }}</b></div></div></div>
+        {% else %}
+          <div class="info-row"><div><small>Day Scholar</small><div><b>—</b></div></div></div>
+        {% endif %}
+
+        <div style="height:8px"></div>
+        <div style="display:flex;gap:8px">
+          <a href="/profile" style="text-decoration:none"><button style="flex:1;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent1),var(--accent2));color:white;font-weight:700;cursor:pointer">Profile</button></a>
+          <a href="/logout" style="text-decoration:none"><button style="padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:transparent;color:#072940;cursor:pointer">Logout</button></a>
+        </div>
+      </div>
+
+      <!-- calendar card -->
+      <div class="card">
+        <div class="cal-header">
+          <div class="cal-title" id="calTitle">Calendar</div>
+          <div class="cal-controls">
+            <button id="prevMonth" title="Previous month">◀</button>
+            <button id="nextMonth" title="Next month">▶</button>
+          </div>
+        </div>
+
+        <div class="cal-grid" id="calGridWeekdays">
+          <!-- weekdays injected by JS -->
+        </div>
+
+        <div class="cal-grid" id="calGridDays" style="margin-top:10px">
+          <!-- days injected by JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: quick stats + outpass + history -->
+    <div class="right-col">
+
+      <div class="quick-grid">
+        <div class="card quick-card">
+          <div class="qc-icon">👤</div>
+          <div class="qc-body"><small>Student</small><b>{{ user.name }}</b></div>
+        </div>
+
+        <div class="card quick-card">
+          <div class="qc-icon">🏷️</div>
+          <div class="qc-body"><small>ID</small><b>{{ user.roll_number }}</b></div>
+        </div>
+
+        <div class="card quick-card">
+          <div class="qc-icon">🏠</div>
+          <div class="qc-body"><small>Stay</small>
+            {% if user.hosteller_or_dayscholar and user.hosteller_or_dayscholar|lower == "hosteller" %}
+              <b>Hosteller</b>
+            {% else %}
+              <b>Day Scholar</b>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="card quick-card">
+          <div class="qc-icon">📅</div>
+          <div class="qc-body"><small>Today</small><b id="todayDate"></b></div>
+        </div>
+      </div>
+
+      <!-- Outpass action cards -->
+      <div class="out-row">
+        <div class="out-card" onclick="location.href='/request_outpass'">
+          <div class="oc-icon">✉️</div>
+          <div class="oc-body"><b>Request Outpass</b><p>Start a chat & submit details to your advisor/warden.</p></div>
+        </div>
+
+        <div class="out-card" onclick="location.href='/outpass_status'">
+          <div class="oc-icon">🔍</div>
+          <div class="oc-body"><b>Track Status</b><p>See current approvals (Advisor → HOD → Warden).</p></div>
+        </div>
+
+        <div class="out-card" onclick="location.href='/outpass_history'">
+          <div class="oc-icon">📜</div>
+          <div class="oc-body"><b>Outpass History</b><p>View past requests and QR codes for security.</p></div>
+        </div>
+      </div>
+
+      <!-- Outpass history list -->
+      <div class="card">
+        <h3 style="margin-top:0;margin-bottom:12px">Recent Outpass Requests</h3>
+
+        <div class="history-list">
+          {% if outpasses and outpasses|length > 0 %}
+            {% for o in outpasses[:6] %}
+              <div class="hist-item">
+                <div class="hist-left">
+                  <small>{{ o.date }}</small>
+                  <div style="font-weight:700">{{ o.reason }}</div>
+                  <small style="color:var(--muted)">{{ o.applied_to if o.applied_to else 'Advisor' }}</small>
+                </div>
+
+                <div style="display:flex;gap:10px;align-items:center">
+                  {% if o.status == 'Approved' %}
+                    <div class="badge approved">Approved</div>
+                  {% elif o.status == 'Pending' %}
+                    <div class="badge pending">Pending</div>
+                  {% else %}
+                    <div class="badge rejected">Rejected</div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div style="color:var(--muted);padding:12px;border-radius:8px;background:rgba(255,255,255,0.6)">No outpass history available.</div>
+          {% endif %}
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- floating chat button (always on top) -->
+  <button class="chat-btn" id="chatBtn" title="Chat with Exitease">💬</button>
+  <div class="chat-label">Chat</div>
+
+<script>
+/* ---------- Calendar (month navigation + highlights) ---------- */
+(function(){
+  const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const wdContainer = document.getElementById('calGridWeekdays');
+  weekdays.forEach(d=>{
+    const el = document.createElement('div');
+    el.className = 'cal-weekday';
+    el.textContent = d;
+    wdContainer.appendChild(el);
+  });
+
+  const calDays = document.getElementById('calGridDays');
+  const calTitle = document.getElementById('calTitle');
+  const todayDate = document.getElementById('todayDate');
+  const now = new Date();
+  let viewYear = now.getFullYear();
+  let viewMonth = now.getMonth();
+
+  function renderCalendar(y,m){
+    calDays.innerHTML = '';
+    const first = new Date(y,m,1);
+    const startDow = first.getDay(); // 0..6
+    const days = new Date(y, m+1, 0).getDate();
+    calTitle.textContent = `${first.toLocaleString('default',{month:'long'})} ${y}`;
+
+    // fill blanks
+    for(let i=0;i<startDow;i++){
+      const blank = document.createElement('div');
+      blank.className = 'cal-day small';
+      blank.innerHTML = '';
+      calDays.appendChild(blank);
+    }
+
+    // add day cells
+    for(let d=1; d<=days; d++){
+      const dt = new Date(y,m,d);
+      const cell = document.createElement('div');
+      cell.className = 'cal-day small';
+      const num = document.createElement('div'); num.className='num'; num.textContent = d;
+      cell.appendChild(num);
+
+      // If Sunday -> highlight
+      if(dt.getDay() === 0) cell.classList.add('highlight');
+
+      // 1st and 3rd Saturday -> highlight
+      if(dt.getDay() === 6){
+        const weekOfMonth = Math.ceil(d/7);
+        if(weekOfMonth === 1 || weekOfMonth === 3) cell.classList.add('highlight');
+      }
+
+      // optionally attach events or small markers (e.g., if you have outpass dates)
+      // Example: check for events passed from server (optionally implement)
+      calDays.appendChild(cell);
+    }
+  }
+
+  document.getElementById('prevMonth').addEventListener('click', ()=>{
+    viewMonth--;
+    if(viewMonth < 0){ viewMonth = 11; viewYear--; }
+    renderCalendar(viewYear, viewMonth);
+  });
+  document.getElementById('nextMonth').addEventListener('click', ()=>{
+    viewMonth++;
+    if(viewMonth > 11){ viewMonth = 0; viewYear++; }
+    renderCalendar(viewYear, viewMonth);
+  });
+
+  // set today label
+  todayDate.textContent = new Date().toLocaleDateString();
+  renderCalendar(viewYear, viewMonth);
+})();
+
+/* ---------- Chat button always front and navigation ---------- */
+document.getElementById('chatBtn').addEventListener('click', ()=>{
+  // guarantee top-most and navigate
+  window.location.href = '/chatbot';
+});
+
+/* ensure chat button stays above any overlay elements */
+document.getElementById('chatBtn').style.zIndex = 9999;
+document.querySelector('.chat-label').style.zIndex = 9998;
+
+</script>
+
+</body>
+</html>
