@@ -199,22 +199,24 @@
 
   <!-- header -->
   <header>
-    <div class="brand">
-      <div class="logo">E</div>
-      <div>
-        <h1>Exitease</h1>
-        <p>Chat-driven Outpass Management • Institute</p>
-      </div>
+  <div class="brand">
+    <div class="logo">E</div>
+    <div>
+      <h1>Exitease</h1>
+      <p>Chat-driven Outpass Management • Institute</p>
     </div>
+  </div>
 
-    <div class="profile">
-      <div class="avatar">{{ user.name[0] if user.name }}</div>
-      <div>
-        <div class="name">{{ user.name }}</div>
-        <div class="muted" style="text-align:right;font-size:12px">{{ user.dept }} • {{ user.year }}</div>
-      </div>
+  <div class="profile">
+    {# compute a safe display name from variables passed by the view #}
+    {% set display_name = (user.name if user and user.name else name if name else '') %}
+    <div class="avatar">{{ (display_name[0] if display_name else 'U') }}</div>
+    <div>
+      <div class="name">{{ display_name }}</div>
+      <div class="muted" style="text-align:right;font-size:12px">{{ (user.dept|default('')) }} • {{ (user.year|default('')) }}</div>
     </div>
-  </header>
+  </div>
+</header>
 
   <!-- main page -->
   <div class="page">
@@ -224,19 +226,19 @@
 
       <!-- student card -->
       <div class="card">
-        <div class="student-name">{{ user.name }}</div>
-        <div class="muted">{{ user.username }} • {{ user.roll_number }}</div>
+        <div class="student-name">{{ display_name if display_name else 'Student' }}</div>
+        <div class="muted">{{ user.username|default('') }} • {{ user.roll_number|default('') }}</div>
 
         <div style="height:10px"></div>
-        <div class="info-row"><div><small>Register No</small><div><b>{{ user.reg_number }}</b></div></div></div>
-        <div class="info-row"><div><small>Year</small><div><b>{{ user.year }}</b></div></div></div>
+        <div class="info-row"><div><small>Register No</small><div><b>{{ user.reg_number|default('—') }}</b></div></div></div>
+        <div class="info-row"><div><small>Year</small><div><b>{{ user.year|default('—') }}</b></div></div></div>
 
-        <!-- hosteller logic: show room & warden; if dayscholar, do not show bus number -->
-        {% if user.hosteller_or_dayscholar and user.hosteller_or_dayscholar|lower == "hosteller" %}
-          <div class="info-row"><div><small>Hosteller</small><div><b>Room {{ user.room_number }}</b></div></div></div>
-          <div class="info-row"><div><small>Warden</small><div><b>{{ user.warden_name if user.warden_name else '—' }}</b></div></div></div>
-        {% else %}
-          <div class="info-row"><div><small>Day Scholar</small><div><b>—</b></div></div></div>
+        <!-- show advisor & hod always; show warden only for hostellers -->
+        <div class="info-row"><div><small>Advisor</small><div><b>{{ advisor_name|default(user.advisor_name|default('—')) }}</b></div></div></div>
+        <div class="info-row"><div><small>HOD</small><div><b>{{ hod_name|default(user.hod_name|default('—')) }}</b></div></div></div>
+        {% set stay = (user.hosteller_or_dayscholar|default('')).lower() %}
+        {% if stay == 'hosteller' %}
+          <div class="info-row"><div><small>Warden</small><div><b>{{ warden_name|default(user.warden_name|default('—')) }}</b></div></div></div>
         {% endif %}
 
         <div style="height:8px"></div>
@@ -326,17 +328,31 @@
               <div class="hist-item">
                 <div class="hist-left">
                   <small>{{ o.date }}</small>
-                  <div style="font-weight:700">{{ o.reason }}</div>
-                  <small style="color:var(--muted)">{{ o.applied_to if o.applied_to else 'Advisor' }}</small>
+                  {# reason becomes clickable; include leave/return in data-attrs (with fallbacks) #}
+                  <div style="font-weight:700">
+                    <a href="javascript:void(0)"
+                       class="reason-link"
+                       data-reason="{{ o.reason|e }}"
+                       data-leave="{{ o.leave_time|default(o.leave|default('Not set'))|e }}"
+                       data-return="{{ o.return_time|default(o.return|default('Not set'))|e }}"
+                       style="color:inherit;text-decoration:none;cursor:pointer">
+                      {{ o.reason }}
+                    </a>
+                  </div>
+      
                 </div>
 
                 <div style="display:flex;gap:10px;align-items:center">
-                  {% if o.status == 'Approved' %}
-                    <div class="badge approved">Approved</div>
-                  {% elif o.status == 'Pending' %}
-                    <div class="badge pending">Pending</div>
+                  {# normalize and match substrings so full status texts like "Rejected by HOD" are handled #}
+                  {% set st = (o.status or '') | lower %}
+                  {% if 'approved' in st %}
+                    <div class="badge approved">{{ o.status }}</div>
+                  {% elif 'pending' in st %}
+                    <div class="badge pending">{{ o.status }}</div>
+                  {% elif 'rejected' in st %}
+                    <div class="badge rejected">{{ o.status }}</div>
                   {% else %}
-                    <div class="badge rejected">Rejected</div>
+                    <div class="badge pending">{{ o.status or 'Pending' }}</div>
                   {% endif %}
                 </div>
               </div>
@@ -354,6 +370,21 @@
   <!-- floating chat button (always on top) -->
   <button class="chat-btn" id="chatBtn" title="Chat with Exitease">💬</button>
   <div class="chat-label">Chat</div>
+
+  <!-- simple modal to show leave/return details -->
+  <div id="reasonModal" style="display:none;position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;z-index:10000">
+    <div style="background:#fff;border-radius:12px;padding:18px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+      <h3 id="modalReason" style="margin:0 0 8px;font-size:18px;color:#072940"></h3>
+      <div style="color:var(--muted);margin-bottom:12px">
+        <div><small>Leave time</small><div id="modalLeave" style="font-weight:700;color:#072940"></div></div>
+        <div style="height:8px"></div>
+        <div><small>Return time</small><div id="modalReturn" style="font-weight:700;color:#072940"></div></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="modalClose" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer">Close</button>
+      </div>
+    </div>
+  </div>
 
 <script>
 /* ---------- Calendar (month navigation + highlights) ---------- */
@@ -438,6 +469,29 @@ document.getElementById('chatBtn').addEventListener('click', ()=>{
 document.getElementById('chatBtn').style.zIndex = 9999;
 document.querySelector('.chat-label').style.zIndex = 9998;
 
+/* ---------- Reason click -> show leave/return modal ---------- */
+(function(){
+  const modal = document.getElementById('reasonModal');
+  const modalReason = document.getElementById('modalReason');
+  const modalLeave = document.getElementById('modalLeave');
+  const modalReturn = document.getElementById('modalReturn');
+  const modalClose = document.getElementById('modalClose');
+
+  document.querySelectorAll('.reason-link').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const reason = el.getAttribute('data-reason') || 'Reason';
+      const leave = el.getAttribute('data-leave') || 'Not set';
+      const ret = el.getAttribute('data-return') || 'Not set';
+      modalReason.textContent = reason;
+      modalLeave.textContent = leave;
+      modalReturn.textContent = ret;
+      modal.style.display = 'flex';
+    });
+  });
+
+  modalClose.addEventListener('click', ()=> modal.style.display = 'none');
+  modal.addEventListener('click', (e)=> { if(e.target === modal) modal.style.display = 'none'; });
+})();
 </script>
 
 </body>

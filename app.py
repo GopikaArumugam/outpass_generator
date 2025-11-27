@@ -75,7 +75,7 @@ def login():
         if user['role'] in ['Advisor', 'HOD', 'Warden']:
             return redirect(url_for('dashboard'))
         elif user['role'] == 'student':
-            return redirect(url_for('chatbot'))
+            return redirect(url_for('student_dashboard'))  # changed: go to student dashboard
         elif user['role'] == 'security':
             return render_template('security.html')  # or redirect to a route if preferred
         else:
@@ -514,12 +514,75 @@ def send_email_with_attachment(to_email, subject, message, attachment_path):
 
 @app.route('/logout')
 def logout():
+    username = session.get('username')  # capture before clearing
     session.clear()
-    print("Session Username:", session['username'])
+    print("Session Username:", username)
     return redirect(url_for('home'))
 
+@app.route('/student_dashboard')
+@login_required
+def student_dashboard():
+    user = get_user_by_username(session['username'])
+    if not user:
+        return redirect(url_for('logout'))
 
-# ---------------- MAIN ----------------
+    name = user.get('name', session['username'])
+    roll_number = user.get('roll_number')
+
+    # fetch advisor / hod / warden based on student's dept/year/room
+    dept = user.get('dept')
+    year = user.get('year')
+    room_number = user.get('room_number')
+    hosteller_or_dayscholar = user.get('hosteller_or_dayscholar', 'Dayscholar')
+
+    advisor_name = None
+    hod_name = None
+    warden_name = None
+
+    try:
+        # Advisor (match by dept + year)
+        advisor = users_collection.find_one({"role": "Advisor", "dept": dept, "year": year})
+        if advisor:
+            advisor_name = advisor.get('name') or advisor.get('username')
+
+        # HOD (match by dept)
+        hod = users_collection.find_one({"role": "HOD", "dept": dept})
+        if hod:
+            hod_name = hod.get('name') or hod.get('username')
+
+        # Warden (only for hostellers) - match room range if provided
+        if hosteller_or_dayscholar.lower() == "hosteller" and room_number:
+            for w in users_collection.find({"role": "Warden"}):
+                room_range = w.get("room_number_range")
+                if room_range:
+                    try:
+                        start, end = map(int, room_range.split('-'))
+                        if start <= int(room_number) <= end:
+                            warden_name = w.get('name') or w.get('username')
+                            break
+                    except Exception:
+                        continue
+    except Exception as e:
+        print("Error fetching advisor/hod/warden:", str(e))
+
+    # optional: fetch student's outpasses
+    try:
+        outpasses = list(outpasses_collection.find({"roll_number": roll_number}).sort("request_date", -1))
+    except Exception:
+        outpasses = []
+
+    return render_template(
+        'stud_dash.html',
+        user=user,
+        name=name,
+        roll_number=roll_number,
+        outpasses=outpasses,
+        advisor_name=advisor_name,
+        hod_name=hod_name,
+        warden_name=warden_name
+    )
+
+# ----------    ------ MAIN ----------------
 
 if __name__ == '__main__':
      app.run(host='0.0.0.0',port=5000,debug=True)
@@ -545,3 +608,5 @@ def generate_qr_code(data):
     except Exception as e:
         print("Error generating QR code:", str(e))
         return None
+
+
