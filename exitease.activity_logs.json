@@ -1,0 +1,42 @@
+[{
+  "_id": {
+    "$oid": "6875d12f745f0a773707f8b8"
+  },
+  "reg_number": "714023247014",
+  "action": "Exit",
+  "action_time": "2025-07-15 09:25",
+  "status": "error",
+  "result_message": "No outpass found for the specified time: 2025-07-15 09:25",
+  "logged_at": {
+    "$date": "2025-07-15T03:55:27.971Z"
+  },
+  "student_name": "GOPIKA A S"
+},
+{
+  "_id": {
+    "$oid": "6875d151745f0a773707f8b9"
+  },
+  "reg_number": "714023247014",
+  "action": "Entry",
+  "action_time": "2025-07-15 09:26",
+  "status": "error",
+  "result_message": "No outpass found for the specified time: 2025-07-15 09:26",
+  "logged_at": {
+    "$date": "2025-07-15T03:56:01.309Z"
+  },
+  "student_name": "GOPIKA A S"
+},
+{
+  "_id": {
+    "$oid": "6875dccf745f0a773707f8ba"
+  },
+  "reg_number": "714023247014",
+  "action": "Exit",
+  "action_time": "2025-07-15 10:15",
+  "status": "error",
+  "result_message": "No outpass found for the specified time: 2025-07-15 10:15",
+  "logged_at": {
+    "$date": "2025-07-15T04:45:03.165Z"
+  },
+  "student_name": "GOPIKA A S"
+}]

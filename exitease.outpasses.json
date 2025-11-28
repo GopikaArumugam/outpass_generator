@@ -1,0 +1,44 @@
+[{
+  "_id": {
+    "$oid": "68de37778cfbcf75bca7b5f1"
+  },
+  "student_name": "GOPIKA A S",
+  "roll_number": "23AM014",
+  "reg_number": "714023247014",
+  "leave_time": "2025-10-02 06:00",
+  "return_time": "2025-10-03 06:00",
+  "reason": "Attending Seminar/Workshop",
+  "status": "Accepted by Warden",
+  "is_emergency": true,
+  "request_date": {
+    "$date": "2025-10-02T08:27:35.605Z"
+  },
+  "year": "II",
+  "dept": "AIML",
+  "advisor": "gayathri_n",
+  "hod": "hemalatha_s",
+  "warden": "sabitha",
+  "processed_by": "sabitha"
+},
+{
+  "_id": {
+    "$oid": "68de70e1dc368815e2a7a32e"
+  },
+  "student_name": "GOPIKA A S",
+  "roll_number": "23AM014",
+  "reg_number": "714023247014",
+  "leave_time": "2025-10-12 09:00",
+  "return_time": "2025-10-23 06:00",
+  "reason": "Project Work Outside Campus",
+  "status": "Accepted by Advisor",
+  "is_emergency": false,
+  "request_date": {
+    "$date": "2025-10-02T12:32:33.773Z"
+  },
+  "year": "II",
+  "dept": "AIML",
+  "advisor": "gayathri_n",
+  "hod": "hemalatha_s",
+  "warden": "sabitha",
+  "processed_by": "gayathri_n"
+}]
