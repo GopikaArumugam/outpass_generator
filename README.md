@@ -101,7 +101,8 @@ python data_up.py
 A `users.json` file is included in the project. It contains predefined user accounts (students, advisors, HODs, wardens, etc.) used for authentication and role-based access.
 
 Place the JSON file in the appropriate directory (usually the project root or a `data/` folder) and ensure your loading script reads from it correctly.
-Use the script below to insert student information into the database.
+
+Use the script below to insert student data (face) into the database.
 
 ```
 python data_up.py
