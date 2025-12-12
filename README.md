@@ -88,13 +88,6 @@ Your application will start running on the local server.
 
 ---
 
-## 👩‍🎓 Adding Student Data
-
-You can insert student information into the database using the script:
-
-```
-python data_up.py
-```
 
 ## 📁 Users JSON File
 
@@ -102,12 +95,13 @@ A `users.json` file is included in the project. It contains predefined user acco
 
 Place the JSON file in the appropriate directory (usually the project root or a `data/` folder) and ensure your loading script reads from it correctly.
 
-Use the script below to insert student data (face) into the database.
+## 👩‍🎓 Adding Student Data
+
+You can insert student information into the database using the script:
 
 ```
 python data_up.py
 ```
-
 ---
 
 ## 📌 Notes
