@@ -302,12 +302,12 @@
 
       <!-- Outpass action cards -->
       <div class="out-row">
-        <div class="out-card" onclick="location.href='/request_outpass'">
+        <div class="out-card" onclick="openChat()">
           <div class="oc-icon">✉️</div>
           <div class="oc-body"><b>Request Outpass</b><p>Start a chat & submit details to your advisor/warden.</p></div>
         </div>
 
-        <div class="out-card" onclick="location.href='/outpass_status'">
+        <div class="out-card" onclick="location.href='/track_status'">
           <div class="oc-icon">🔍</div>
           <div class="oc-body"><b>Track Status</b><p>See current approvals (Advisor → HOD → Warden).</p></div>
         </div>
@@ -325,7 +325,9 @@
         <div class="history-list">
           {% if outpasses and outpasses|length > 0 %}
             {% for o in outpasses[:6] %}
-              <div class="hist-item">
+              {% set is_hosteller_warden_accepted = (user.hosteller_or_dayscholar|default('')|lower == 'hosteller' and o.status == 'Accepted by Warden') %}
+              {% set is_dayscholar_hod_accepted = (user.hosteller_or_dayscholar|default('')|lower == 'dayscholar' and o.status == 'Accepted by HOD') %}
+              <div class="hist-item" {% if is_hosteller_warden_accepted or is_dayscholar_hod_accepted %}style="background-color: #d4edda; border-color: #c3e6cb;"{% endif %}>
                 <div class="hist-left">
                   <small>{{ o.date }}</small>
                   {# reason becomes clickable; include leave/return in data-attrs (with fallbacks) #}
@@ -339,20 +341,22 @@
                       {{ o.reason }}
                     </a>
                   </div>
-      
+
                 </div>
 
                 <div style="display:flex;gap:10px;align-items:center">
                   {# normalize and match substrings so full status texts like "Rejected by HOD" are handled #}
                   {% set st = (o.status or '') | lower %}
-                  {% if 'approved' in st %}
-                    <div class="badge approved">{{ o.status }}</div>
+                  {% if is_hosteller_warden_accepted or is_dayscholar_hod_accepted %}
+                    <div class="badge approved status-badge" style="cursor: pointer;" data-status="{{ o.status }}" data-leave="{{ o.leave_time|default(o.leave|default('Not set'))|e }}" data-return="{{ o.return_time|default(o.return|default('Not set'))|e }}">Accepted</div>
+                  {% elif 'approved' in st %}
+                    <div class="badge approved status-badge" style="cursor: pointer;" data-status="{{ o.status }}" data-leave="{{ o.leave_time|default(o.leave|default('Not set'))|e }}" data-return="{{ o.return_time|default(o.return|default('Not set'))|e }}">{{ o.status }}</div>
                   {% elif 'pending' in st %}
-                    <div class="badge pending">{{ o.status }}</div>
+                    <div class="badge pending status-badge" style="cursor: pointer;" data-status="{{ o.status }}" data-leave="{{ o.leave_time|default(o.leave|default('Not set'))|e }}" data-return="{{ o.return_time|default(o.return|default('Not set'))|e }}">{{ o.status }}</div>
                   {% elif 'rejected' in st %}
-                    <div class="badge rejected">{{ o.status }}</div>
+                    <div class="badge rejected status-badge" style="cursor: pointer;" data-status="{{ o.status }}" data-leave="{{ o.leave_time|default(o.leave|default('Not set'))|e }}" data-return="{{ o.return_time|default(o.return|default('Not set'))|e }}">{{ o.status }}</div>
                   {% else %}
-                    <div class="badge pending">{{ o.status or 'Pending' }}</div>
+                    <div class="badge pending status-badge" style="cursor: pointer;" data-status="{{ o.status or 'Pending' }}" data-leave="{{ o.leave_time|default(o.leave|default('Not set'))|e }}" data-return="{{ o.return_time|default(o.return|default('Not set'))|e }}">{{ o.status or 'Pending' }}</div>
                   {% endif %}
                 </div>
               </div>
@@ -547,15 +551,34 @@ document.head.appendChild(style);
   const modalReturn = document.getElementById('modalReturn');
   const modalClose = document.getElementById('modalClose');
 
+  function showModal(reason, leave, ret) {
+    modalReason.textContent = reason;
+    modalLeave.textContent = leave;
+    modalReturn.textContent = ret;
+    modal.style.display = 'flex';
+  }
+
   document.querySelectorAll('.reason-link').forEach(el=>{
     el.addEventListener('click', ()=>{
       const reason = el.getAttribute('data-reason') || 'Reason';
       const leave = el.getAttribute('data-leave') || 'Not set';
       const ret = el.getAttribute('data-return') || 'Not set';
-      modalReason.textContent = reason;
-      modalLeave.textContent = leave;
-      modalReturn.textContent = ret;
-      modal.style.display = 'flex';
+      showModal(reason, leave, ret);
+    });
+  });
+
+  // Global function for the accepted badge
+  window.showOutpassDetails = function(reason, leave, ret) {
+    showModal(reason, leave, ret);
+  };
+
+  // Handle clicks on status badges
+  document.querySelectorAll('.status-badge').forEach(badge => {
+    badge.addEventListener('click', () => {
+      const status = badge.getAttribute('data-status') || 'Status';
+      const leave = badge.getAttribute('data-leave') || 'Not set';
+      const ret = badge.getAttribute('data-return') || 'Not set';
+      showModal(status, leave, ret);
     });
   });
 

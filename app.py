@@ -84,6 +84,59 @@ def login():
         return render_template('login.html', error="Invalid credentials")
 
 
+@app.route('/track_status')
+@login_required
+def track_status():
+    user = get_user_by_username(session['username'])
+    if not user:
+        return redirect(url_for('logout'))
+
+    # Get user's outpass requests
+    outpasses = list(outpasses_collection.find({"roll_number": user.get('roll_number')}).sort("request_date", -1))
+
+    # Determine approval path based on stay type
+    stay_type = user.get('hosteller_or_dayscholar', '').lower()
+    approval_path = ['Student', 'Advisor', 'HOD']
+    if stay_type == 'hosteller':
+        approval_path.append('Warden')
+
+    return render_template('track_status.html', user=user, outpasses=outpasses, approval_path=approval_path)
+
+@app.route('/outpass_history')
+@login_required
+def outpass_history():
+    user = get_user_by_username(session['username'])
+    if not user:
+        return redirect(url_for('logout'))
+
+    # Get ALL user's outpass requests (no limit)
+    outpasses = list(outpasses_collection.find({"roll_number": user.get('roll_number')}).sort("request_date", -1))
+
+    return render_template('outpass_history.html', user=user, outpasses=outpasses)
+
+@app.route('/test_qr')
+@login_required
+def test_qr():
+    # Test QR code generation
+    test_data = {
+        "name": "Test Student",
+        "class": "CSE 2023",
+        "reg_number": "12345",
+        "roll_number": "714022202001",
+        "requested_time": "2025-01-01 10:00:00",
+        "leave_time": "2025-01-01 14:00",
+        "return_time": "2025-01-01 18:00",
+        "reason": "Test",
+        "approved_by": "Test",
+        "approved_time": str(datetime.utcnow())
+    }
+
+    qr_path = generate_qr_code(test_data)
+    if qr_path:
+        return f"QR code generated successfully: {qr_path}"
+    else:
+        return "QR code generation failed - check console logs"
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -97,18 +150,30 @@ def dashboard():
     # Query for pending requests based on the role
     if role == 'advisor':
         pending_requests = list(outpasses_collection.find({
-            "status": "Requested",
-            "advisor": username  # Match the advisor's username
+            "advisor": username,
+            "$or": [
+                {"status": "Requested"},
+                {"status": f"Meet in Person requested by {username}"},
+                {"status": "Met"}
+            ]
         }))
     elif role == 'hod':
         pending_requests = list(outpasses_collection.find({
-            "status": "Accepted by Advisor",
-            "hod": username  # Match the HOD's username
+            "hod": username,
+            "$or": [
+                {"status": "Accepted by Advisor"},
+                {"status": f"Meet in Person requested by {username}"},
+                {"status": "Met"}
+            ]
         }))
     elif role == 'warden':
         pending_requests = list(outpasses_collection.find({
-            "status": "Accepted by HOD",
-            "warden": username  # Match the Warden's username
+            "warden": username,
+            "$or": [
+                {"status": "Accepted by HOD"},
+                {"status": f"Meet in Person requested by {username}"},
+                {"status": "Met"}
+            ]
         }))
     else:
         pending_requests = []
@@ -116,30 +181,55 @@ def dashboard():
     # Query for emergency requests based on the role and status
     if role == 'advisor':
         emergency_requests = list(outpasses_collection.find({
-            "status": "Requested",
+            "advisor": username,
             "is_emergency": True,
-            "advisor": username  # Match the advisor's username
+            "$or": [
+                {"status": "Requested"},
+                {"status": f"Meet in Person requested by {username}"},
+                {"status": "Met"}
+            ]
         }))
     elif role == 'hod':
         emergency_requests = list(outpasses_collection.find({
-            "status": "Accepted by Advisor",
+            "hod": username,
             "is_emergency": True,
-            "hod": username  # Match the HOD's username
+            "$or": [
+                {"status": "Accepted by Advisor"},
+                {"status": f"Meet in Person requested by {username}"},
+                {"status": "Met"}
+            ]
         }))
     elif role == 'warden':
         emergency_requests = list(outpasses_collection.find({
-            "status": "Accepted by HOD",
+            "warden": username,
             "is_emergency": True,
-            "warden": username  # Match the Warden's username
+            "$or": [
+                {"status": "Accepted by HOD"},
+                {"status": f"Meet in Person requested by {username}"},
+                {"status": "Met"}
+            ]
         }))
     else:
         emergency_requests = []
 
     # Query for previously accepted requests
-    accepted_requests = list(outpasses_collection.find({
-        "status": {"$regex": "Accepted by.*"},  # Match statuses like "Accepted by Advisor"
-        "processed_by": username  # Match the approver's username
-    }))
+    if role == 'advisor':
+        accepted_requests = list(outpasses_collection.find({
+            "advisor": username,
+            "status": {"$regex": "Accepted by.*"}
+        }))
+    elif role == 'hod':
+        accepted_requests = list(outpasses_collection.find({
+            "hod": username,
+            "status": {"$regex": "Accepted by.*"}
+        }))
+    elif role == 'warden':
+        accepted_requests = list(outpasses_collection.find({
+            "warden": username,
+            "status": {"$regex": "Accepted by.*"}
+        }))
+    else:
+        accepted_requests = []
 
     return render_template(
         'dashboard.html',
@@ -382,8 +472,11 @@ def get_previous_outpasses(student_id):
 @app.route('/process_outpass/<outpass_id>', methods=['POST'])
 @login_required
 def process_outpass(outpass_id):
+    print(f"=== PROCESS_OUTPASS ROUTE CALLED ===")
+    print(f"Outpass ID: {outpass_id}")
     try:
         action = request.form.get('action')
+        print(f"Action received: {action}")
         user = get_user_by_username(session['username'])  # Get the logged-in user's details
         user_role = user.get('role')  # Fetch the role of the user (e.g., Advisor, HOD, Warden)
 
@@ -407,32 +500,60 @@ def process_outpass(outpass_id):
 
         # Update the status based on the action
         if action == "Accepted":
+            print(f"=== ACCEPTANCE BUTTON CLICKED ===")
+            print(f"Action: {action}, User Role: {user_role}, Session User: {session['username']}")
+            print(f"Outpass ID: {outpass_id}")
             new_status = f"Accepted by {user_role}"
+            print(f"New status will be: {new_status}")
 
-            # If the warden accepts the outpass, generate a QR code
+            # Check if this is the final approval (Warden for hostellers, HOD for day scholars)
+            print(f"Checking final approval for {user_role}, session user: {session['username']}")
+            print(f"Outpass data - warden: {outpass.get('warden')}, hod: {outpass.get('hod')}, roll_number: {outpass.get('roll_number')}")
+
+            is_final_approval = False
             if user_role == "warden":
-                # Include all outpass data in the QR code
-                qr_code_data = {key: str(value) for key, value in outpass.items()}
+                print(f"Warden approval detected, checking if assigned warden matches session user")
+                if outpass.get('warden') == session['username']:
+                    is_final_approval = True
+                    print("FINAL APPROVAL: Warden match - QR code will be generated")
+                else:
+                    print(f"Warden mismatch: outpass.warden={outpass.get('warden')} != session.username={session['username']}")
+            elif user_role == "hod":
+                print(f"HOD approval detected, checking student type")
+                day_scholar_check = users_collection.find_one({"roll_number": roll_number})
+                if day_scholar_check:
+                    student_type = day_scholar_check.get('hosteller_or_dayscholar', '').lower()
+                    print(f"Student type: {student_type}")
+                    if student_type == 'dayscholar':
+                        is_final_approval = True
+                        print("FINAL APPROVAL: Day scholar + HOD - QR code will be generated")
+                    else:
+                        print(f"Not final approval: student is {student_type}, not dayscholar")
+                else:
+                    print("ERROR: Could not find student record for final approval check")
 
-                # Generate the QR code
-                qr_code_path = generate_qr_code(qr_code_data)
-
-                # Send the QR code to the student's email
-                subject = "Your Approved Outpass with QR Code"
+            if is_final_approval:
+                # Send confirmation email
+                subject = "Your Outpass Request Fully Approved"
                 message = (
                     f"Dear {student.get('name')},\n\n"
-                    f"Your outpass request has been approved by the Warden.\n\n"
-                    f"Please find the attached QR code containing your outpass details.\n\n"
+                    f"Your outpass request has been fully approved.\n\n"
+                    f"Details:\n"
+                    f"Leave Time: {outpass.get('leave_time')}\n"
+                    f"Return Time: {outpass.get('return_time')}\n"
+                    f"Reason: {outpass.get('reason')}\n\n"
                     f"Thank you."
                 )
-                send_email_with_attachment(student_email, subject, message, qr_code_path)
-                flash(f'QR code sent to {student_email}.', 'success')
+                send_email(student_email, subject, message)
+                flash(f'Outpass fully approved and confirmation sent to {student_email}.', 'success')
             else:
-                # Send a simple email notification for acceptance
+                # Send a simple email notification for intermediate acceptance
                 subject = "Outpass Request Accepted"
                 message = (
                     f"Dear {student.get('name')},\n\n"
                     f"Your outpass request has been accepted by {user_role}.\n\n"
+                    f"Leave Time: {outpass.get('leave_time')}\n"
+                    f"Return Time: {outpass.get('return_time')}\n\n"
                     f"Thank you."
                 )
                 send_email(student_email, subject, message)
@@ -445,12 +566,14 @@ def process_outpass(outpass_id):
             message = (
                 f"Dear {student.get('name')},\n\n"
                 f"Your outpass request has been rejected by {user_role}.\n\n"
+                f"Leave Time: {outpass.get('leave_time')}\n"
+                f"Return Time: {outpass.get('return_time')}\n\n"
                 f"Thank you."
             )
             send_email(student_email, subject, message)
 
         elif action == "Meet in Person":
-            new_status = f"Meet in Person requested by {user_role}"
+            new_status = f"Meet in Person requested by {session['username']}"
 
             # Send an email notification for meeting in person
             subject = "Meet in Person Request for Outpass"
@@ -459,6 +582,20 @@ def process_outpass(outpass_id):
                 f"Your outpass request for the time range {outpass.get('leave_time')} to {outpass.get('return_time')} "
                 f"requires you to meet in person with {user_role}.\n\n"
                 f"Please contact the {user_role} as soon as possible.\n\n"
+                f"Thank you."
+            )
+            send_email(student_email, subject, message)
+
+        elif action == "Met":
+            new_status = "Met"
+
+            # Send an email notification that the student has met
+            subject = "Outpass Meeting Completed"
+            message = (
+                f"Dear {student.get('name')},\n\n"
+                f"You have successfully met with {user_role} for your outpass request "
+                f"(Leave: {outpass.get('leave_time')} to Return: {outpass.get('return_time')}).\n\n"
+                f"The request is now pending final approval.\n\n"
                 f"Thank you."
             )
             send_email(student_email, subject, message)
@@ -585,28 +722,62 @@ def student_dashboard():
 # ----------    ------ MAIN ----------------
 
 if __name__ == '__main__':
-     app.run(host='0.0.0.0',port=5000,debug=True)
+    # Disable the reloader on Windows to avoid "An operation was attempted on something that is not a socket"
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
 
-def generate_qr_code(data):
+def generate_qr_code(data_dict):
     try:
+        print("Starting QR code generation...")
+        import json
+
+        # Check if qrcode is available
+        try:
+            import qrcode
+            print("QR code library imported successfully")
+        except ImportError as ie:
+            print(f"QR code library not available: {ie}")
+            return None
+
+        # Convert dictionary to JSON string for QR code
+        qr_data = json.dumps(data_dict)
+        print(f"QR data prepared: {len(qr_data)} characters")
+
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
             box_size=10,
             border=4,
         )
-        qr.add_data(data)
+        qr.add_data(qr_data)
         qr.make(fit=True)
+        print("QR code matrix generated")
 
         # Save the QR code to a file
-        qr_code_path = os.path.join("static", "qr_codes", f"{data['roll_number']}_outpass.png")
+        filename = f"{data_dict['roll_number']}_outpass.png"
+        qr_code_path = os.path.join("static", "qr_codes", filename)
+
+        print(f"Attempting to save QR code to: {qr_code_path}")
+
+        # Ensure the directory exists
         os.makedirs(os.path.dirname(qr_code_path), exist_ok=True)
+        print(f"Directory created/verified: {os.path.dirname(qr_code_path)}")
+
+        # Generate and save the QR code
         qr_img = qr.make_image(fill_color="black", back_color="white")
         qr_img.save(qr_code_path)
 
-        return qr_code_path
+        # Verify file was created
+        if os.path.exists(qr_code_path):
+            file_size = os.path.getsize(qr_code_path)
+            print(f"QR code saved successfully: {qr_code_path} ({file_size} bytes)")
+        else:
+            print(f"ERROR: QR code file was not created at {qr_code_path}")
+            return None
+
+        # Return just the filename for storage in database
+        return filename
     except Exception as e:
-        print("Error generating QR code:", str(e))
+        print(f"Error generating QR code: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return None
-
-

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Outpass Status - Exitease</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg1: #d0e8ff;
+            --bg2: #f6f9ff;
+            --accent1: #7eb4ff;
+            --accent2: #558dff;
+            --glass: rgba(255,255,255,0.26);
+            --muted: #4a6b8f;
+            --green: #16a34a;
+            --yellow: #f59e0b;
+            --red: #dc2626;
+            --blue: #3b82f6;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Poppins", sans-serif;
+            background: linear-gradient(135deg, var(--bg1), var(--bg2));
+            color: #072940;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 16px 20px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            border-bottom: 1px solid var(--glass);
+            backdrop-filter: blur(10px);
+        }
+
+        .brand {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent1), var(--accent2));
+        }
+
+        .brand h1 {
+            font-size: 18px;
+            margin: 0;
+            color: #072940;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 1px solid var(--glass);
+            color: #072940;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #072940;
+            font-size: 28px;
+        }
+
+        /* Professional Status Cards */
+        .status-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .request-info h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .request-meta {
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-indicator.accepted {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .status-indicator.pending {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-indicator.rejected {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .status-indicator.progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .approval-flow {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 24px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .flow-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+        }
+
+        .connector-line {
+            flex: 1;
+            height: 2px;
+            background: #e5e7eb;
+            margin: 0 10px;
+        }
+
+        .connector-line.completed {
+            background: #10b981;
+        }
+
+        .step-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .step.completed .step-icon {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        .step.current .step-icon {
+            background: #f59e0b;
+            border-color: #f59e0b;
+            color: white;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+        }
+
+        .step.pending .step-icon {
+            background: #e5e7eb;
+            color: #9ca3af;
+        }
+
+        .step.rejected .step-icon {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #6b7280;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .step.completed .step-label {
+            color: #059669;
+        }
+
+        .step.current .step-label {
+            color: #d97706;
+        }
+
+        .step.rejected .step-label {
+            color: #dc2626;
+        }
+
+        .request-details {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        /* Outpass Details */
+        .outpass-details {
+            background: rgba(255,255,255,0.9);
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 30px;
+            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 8px 24px rgba(20,40,70,0.1);
+        }
+
+        .outpass-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(0,0,0,0.04);
+            transition: transform 0.2s ease;
+        }
+
+        .outpass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .outpass-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .outpass-reason {
+            font-weight: 600;
+            color: #072940;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .status-badge.approved { background: var(--green); }
+        .status-badge.pending { background: var(--yellow); }
+        .status-badge.rejected { background: var(--red); }
+
+        .outpass-times {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .time-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .time-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .time-value {
+            font-weight: 600;
+            color: #072940;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .timeline {
+                flex-direction: column;
+                padding: 20px;
+                gap: 20px;
+            }
+
+            .timeline::before {
+                display: none;
+            }
+
+            .progress-indicator {
+                display: none;
+            }
+
+            .outpass-times {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="logo">E</div>
+            <h1>Exitease</h1>
+        </div>
+        <a href="/student_dashboard" class="back-btn">← Back to Dashboard</a>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1>Track Your Outpass Status</h1>
+
+        {% if outpasses %}
+            {% for outpass in outpasses[:5] %} <!-- Show the last 5 requests -->
+                {% set status_color = 'yellow' %}
+                {% if 'rejected' in outpass.status|lower %}
+                    {% set status_color = 'red' %}
+                {% elif 'accepted' in outpass.status|lower %}
+                    {% set status_color = 'green' %}
+                {% endif %}
+
+                <!-- Professional Status Card -->
+                <div class="status-section">
+                    <div class="status-header">
+                        <div class="request-info">
+                            <h3>{{ outpass.reason }}</h3>
+                            <div class="request-meta">
+                                Requested {{ outpass.request_date.strftime('%B %d, %Y at %I:%M %p') if outpass.request_date else 'N/A' }}
+                            </div>
+                        </div>
+                        {% set is_fully_approved = false %}
+                        {% if approval_path|length == 4 and outpass.status == 'Accepted by Warden' %}
+                            {% set is_fully_approved = true %}
+                        {% elif approval_path|length == 3 and outpass.status == 'Accepted by HOD' %}
+                            {% set is_fully_approved = true %}
+                        {% endif %}
+
+                        <div class="status-indicator
+                            {% if is_fully_approved %}accepted
+                            {% elif 'rejected' in outpass.status|lower %}rejected
+                            {% elif 'accepted' in outpass.status|lower %}progress
+                            {% else %}pending{% endif %}">
+                            {% if is_fully_approved %}
+                                ✓ Approved
+                            {% elif 'rejected' in outpass.status|lower %}
+                                ✗ Rejected
+                            {% elif 'accepted' in outpass.status|lower %}
+                                ⟳ In Progress
+                            {% else %}
+                                ○ Pending
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="approval-flow">
+                        {% set current_stage = 0 %}
+                        {% if 'Accepted by Warden' in outpass.status %}
+                            {% set current_stage = 3 %}
+                        {% elif 'Accepted by HOD' in outpass.status %}
+                            {% set current_stage = 2 %}
+                        {% elif 'Accepted by Advisor' in outpass.status %}
+                            {% set current_stage = 1 %}
+                        {% endif %}
+
+                        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            {% for stage in approval_path %}
+                                {% set stage_index = loop.index0 %}
+                                <div class="flow-step {% if stage_index < current_stage %}completed{% elif stage_index == current_stage %}current{% else %}pending{% endif %}">
+                                    <div class="step-icon">
+                                        {% if stage == 'Student' %}👤
+                                        {% elif stage == 'Advisor' %}🎓
+                                        {% elif stage == 'HOD' %}👔
+                                        {% elif stage == 'Warden' %}🏢
+                                        {% endif %}
+                                    </div>
+                                    <div class="step-label">{{ stage }}</div>
+                                </div>
+                                {% if not loop.last %}
+                                    <div class="connector-line {% if stage_index < current_stage %}completed{% endif %}"></div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="request-details">
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">Leave Time</div>
+                                <div class="detail-value">{{ outpass.leave_time }}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Return Time</div>
+                                <div class="detail-value">{{ outpass.return_time }}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Current Status</div>
+                                <div class="detail-value">{{ outpass.status }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px; background: rgba(255,255,255,0.9); border-radius: 16px; margin-top: 30px;">
+                <h3 style="color: var(--muted); margin: 0;">No Outpass Requests Found</h3>
+                <p style="color: var(--muted); margin: 10px 0 20px;">You haven't submitted any outpass requests yet.</p>
+                <a href="/student_dashboard" style="background: linear-gradient(135deg, var(--accent1), var(--accent2)); color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Go to Dashboard</a>
+            </div>
+        {% endif %}
+    </div>
+
+</body>
+</html>
