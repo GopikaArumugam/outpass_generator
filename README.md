@@ -109,6 +109,4 @@ python data_up.py
 * Make sure MongoDB or your chosen DB is running.
 * If using face recognition, ensure your camera is connected and accessible.
 
----
-
 **Exitease – Smart, Secure, and Efficient Outpass Management** 🚀
