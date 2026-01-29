@@ -334,7 +334,7 @@ def verify_student():
                     'message': f'Outpass found for {reg_num}. Available actions: {", ".join(actions)}.'
                 })
             else:
-                return jsonify({'status': 'no_outpass', 'roll_number': reg_num, 'message': f'No outpass found for reg number {reg_num}'})
+                return jsonify({'status': 'no_outpass', 'reg_number': reg_num, 'message': f'No outpass found for reg number {reg_num}'})
         elif result["status"] == "no_face_detected":
             return jsonify({'status': 'error', 'message': 'No face detected'})
         elif result["status"] == "no_match":

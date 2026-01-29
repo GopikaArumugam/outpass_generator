@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from functools import wraps
 import tempfile
 import os
+from dateutil import parser
 
 from database import (
     authenticate_user,
@@ -11,7 +12,9 @@ from database import (
     get_outpass_status,
     get_user_by_username,
     users_collection,
-    outpasses_collection
+    outpasses_collection,
+    irregular_logs_collection,
+    activity_logs_collection
 )
 from face_rec_mod import recognize_student_face
 from bson.objectid import ObjectId  
@@ -330,6 +333,7 @@ def create_outpass():
         outpass_request = {
             "student_name": student_name,  # Name of the user
             "roll_number": roll_number,
+            "reg_number": reg_number,      # Registration number
             "leave_time": leave_time,
             "return_time": return_time,
             "reason": reason,
@@ -371,20 +375,55 @@ def verify_student():
 
         if result["status"] == "matched":
             reg_num = result["reg_num"]
-            # Find user by reg_number
+            print(f"Matched reg_num: {reg_num}")
+            # Find user by reg_number or roll_number
             user = users_collection.find_one({"reg_number": reg_num})
             if not user:
-                return jsonify({'status': 'error', 'message': f'Register number {reg_num} not found in database.'})
-
+                user = users_collection.find_one({"roll_number": reg_num})
+            if not user:
+                return jsonify({'status': 'error', 'message': f'User not found in database.'})
             roll_number = user.get("roll_number")
-            # Search for outpass approved by Warden
-            outpass = outpasses_collection.find_one({"roll_number": roll_number, "status": "Accepted by Warden"})
+            reg_number = user.get("reg_number") or roll_number
+            print(f"Found user roll_number: {roll_number}, reg_number: {reg_number}")
+            # Find outpass by roll_number
+            outpass = outpasses_collection.find_one({
+                "roll_number": roll_number,
+                "status": {"$in": ["Accepted by Warden", "Accepted by HOD"]},
+                "$or": [
+                    {"entry_done": {"$ne": True}},
+                    {"$and": [
+                        {"exit_done": True},
+                        {"entry_done": {"$ne": True}}
+                    ]}
+                ]
+            })
+            print(f"Outpass found: {outpass is not None}")
             if outpass:
-                # Convert ObjectId to string for JSON serialization
                 outpass['_id'] = str(outpass['_id'])
-                return jsonify({'status': 'allowed', 'reg_number': reg_num, 'outpass': outpass})
+                actions = []
+                # Allow Exit only if entry is not done
+                if not outpass.get("entry_done", False):
+                    if not outpass.get("exit_done", False):
+                        actions.append("Exit")
+                    # Allow Entry after exit, but not after entry
+                    actions.append("Entry")
+                print(f"Actions: {actions}")
+                response = {
+                    'status': 'choose_action',
+                    'reg_number': reg_number,
+                    'outpass': {
+                        "leave_time": outpass.get("leave_time", "" ),
+                        "return_time": outpass.get("return_time", "" ),
+                        "student_name": outpass.get("student_name", "")
+                    },
+                    'actions': actions,
+                    'message': f'Outpass found. Available actions: {", ".join(actions)}.'
+                }
+                print(f"Returning: {response}")
+                return jsonify(response)
             else:
-                return jsonify({'status': 'no_outpass', 'reg_number': reg_num, 'message': 'No approved outpass found for this student.'})
+                print("Returning no_outpass")
+                return jsonify({'status': 'no_outpass', 'reg_number': reg_number, 'message': 'No outpass found'})
         elif result["status"] == "no_face_detected":
             return jsonify({'status': 'error', 'message': 'No face detected'})
         elif result["status"] == "no_match":
@@ -648,6 +687,166 @@ def send_email_with_attachment(to_email, subject, message, attachment_path):
         print(f"Email with QR code sent to {to_email}")
     except Exception as e:
         print("Error sending email with attachment:", str(e))
+
+@app.route('/get-user-info', methods=['POST'])
+def get_user_info():
+    reg_number = request.json.get('r_no')
+    print("Frontend sent r_no:", reg_number)
+
+    outpass = outpasses_collection.find_one({
+        "reg_number": reg_number,
+        "status": {"$in": ["Accepted by Warden", "Accepted by HOD"]}
+    })
+    if outpass:
+        print("Outpass found:", outpass)  # <-- Only print if outpass exists
+        outpass['_id'] = str(outpass['_id'])
+        return jsonify({
+            "name": outpass.get("student_name", ""),
+            "reg_number": outpass.get("reg_number", ""),
+            "leave_time": outpass.get("leave_time", ""),
+            "return_time": outpass.get("return_time", ""),
+            "reason": outpass.get("reason", ""),
+            "allowed": True
+        })
+    else:
+        return jsonify({"error": "No info found"}), 404
+
+@app.route('/record-action', methods=['POST'])
+def record_action():
+    data = request.get_json()
+    action = data.get('action')
+    reg_number = data.get('reg_number')
+    action_time = data.get('action_time')
+
+    from dateutil import parser
+    action_dt = parser.parse(action_time)
+
+    filter_query = {
+        "reg_number": reg_number,
+        "status": {"$in": ["Accepted by Warden", "Accepted by HOD"]}
+    }
+    if action == "Entry":
+        filter_query["entry_done"] = {"$ne": True}
+        filter_query["exit_done"] = True  # Only allow entry if exit is already done
+    elif action == "Exit":
+        filter_query["exit_done"] = {"$ne": True}
+        filter_query["entry_done"] = {"$ne": True}  # Only allow exit if entry is not done
+
+    outpasses = list(outpasses_collection.find(filter_query))
+
+    if not outpasses:
+        return jsonify({'status': 'error', 'message': 'No outpass found.'})
+
+    matched_outpass = None
+    for outpass in outpasses:
+        leave_time = outpass.get('leave_time')
+        return_time = outpass.get('return_time')
+        leave_dt = parser.parse(leave_time)
+        return_dt = parser.parse(return_time)
+        if leave_dt <= action_dt <= return_dt:
+            matched_outpass = outpass
+            break
+
+    if not matched_outpass:
+        details = [
+            {
+                "name": o.get('student_name'),
+                "roll_number": o.get('roll_number'),
+                "leave_time": o.get('leave_time'),
+                "return_time": o.get('return_time')
+            }
+            for o in outpasses
+        ]
+        return jsonify({
+            'status': 'error',
+            'message': 'No valid outpass for this action time!',
+            'all_outpasses': details,
+            'action_time': action_time
+        })
+
+    student_name = matched_outpass.get('student_name')
+    roll_number = matched_outpass.get('roll_number')
+    leave_time = matched_outpass.get('leave_time')
+    return_time = matched_outpass.get('return_time')
+
+    if action == "Entry":
+        if action_dt < parser.parse(leave_time):
+            return jsonify({
+                'status': 'error',
+                'message': 'Entry time is before leave time! Not allowed.',
+                'name': student_name,
+                'roll_number': roll_number,
+                'leave_time': leave_time,
+                'return_time': return_time,
+                'action_time': action_time
+            })
+        elif action_dt > parser.parse(return_time):
+            # Add to irregular logs
+            irregular_logs_collection.insert_one({
+                "name": student_name,
+                "roll_number": roll_number,
+                "reg_number": reg_number,
+                "leave_time": leave_time,
+                "entry_time": action_time,
+                "informed": False,
+                "advisor": matched_outpass.get("advisor"),
+                "hod": matched_outpass.get("hod"),
+                "warden": matched_outpass.get("warden")
+            })
+            return jsonify({'status': 'irregular', 'message': 'Late Entry! Added to irregular logs.'})
+        else:
+            outpasses_collection.update_one(
+                {"_id": matched_outpass["_id"]},
+                {"$set": {"entry_done": True, "entry_time": action_time}}
+            )
+            return jsonify({
+                'status': 'success',
+                'message': 'Entry allowed and recorded.',
+                'name': student_name,
+                'roll_number': roll_number,
+                'leave_time': leave_time,
+                'return_time': return_time,
+                'action_time': action_time
+            })
+
+    elif action == "Exit":
+        if action_dt < parser.parse(leave_time):
+            return jsonify({
+                'status': 'error',
+                'message': 'Exit time is before leave time! Not allowed.',
+                'name': student_name,
+                'roll_number': roll_number,
+                'leave_time': leave_time,
+                'return_time': return_time,
+                'action_time': action_time
+            })
+        elif action_dt > parser.parse(return_time):
+            return jsonify({
+                'status': 'error',
+                'message': 'Exit time is after return time! Not allowed.',
+                'name': student_name,
+                'roll_number': roll_number,
+                'leave_time': leave_time,
+                'return_time': return_time,
+                'action_time': action_time
+            })
+        else:
+            outpasses_collection.update_one(
+                {"_id": matched_outpass["_id"]},
+                {"$set": {"exit_done": True, "exit_time": action_time}}
+            )
+            return jsonify({
+                'status': 'success',
+                'message': 'Exit allowed and recorded.',
+                'name': student_name,
+                'roll_number': roll_number,
+                'leave_time': leave_time,
+                'return_time': return_time,
+                'action_time': action_time
+            })
+
+    else:
+        return jsonify({'status': 'error', 'message': 'Invalid action.'})
 
 @app.route('/logout')
 def logout():

@@ -5,225 +5,485 @@
   <title>ExitEase | Security Panel</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --primary: #7eb4ff;
+      --primary-dark: #558dff;
+      --secondary: #f6f9ff;
+      --accent: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text-primary: #2d4b75;
+      --text-secondary: #64748b;
+      --bg-gradient: linear-gradient(135deg, #d0e8ff, #f6f9ff);
+      --card-bg: rgba(255, 255, 255, 0.25);
+      --card-bg-solid: rgba(255, 255, 255, 0.95);
+      --shadow: 0 10px 40px rgba(0, 0, 0, 0.10);
+      --border-radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Poppins', sans-serif;
-      background: #f4f6fc;
+      background: var(--bg-gradient);
       margin: 0;
-      color: #222;
+      color: var(--text-primary);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
     }
+
     .main-content {
       flex: 1;
-      background: #f4f6fc;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
+
+    .main-content::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="60" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+      pointer-events: none;
+    }
+
     .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: #7a4edf;
-      color: #fff;
-      padding: 18px 36px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text-primary);
+      padding: 20px 40px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
+
     .topbar .title {
-      font-size: 22px;
-      font-weight: 600;
+      font-size: 24px;
+      font-weight: 700;
       letter-spacing: 1px;
       display: flex;
       align-items: center;
-      gap: 18px;
+      gap: 16px;
+      color: var(--primary);
     }
+
+    .topbar .title::before {
+      content: '🔒';
+      font-size: 28px;
+    }
+
     .topbar .datetime {
-      font-size: 16px;
-      font-weight: 500;
-      margin-left: 850px;
+      background: var(--primary);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
+
     .topbar .profile {
-      width: 38px;
-      height: 38px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      background: #fff;
+      background: var(--primary);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #7a4edf;
-      font-size: 22px;
+      color: white;
+      font-size: 20px;
       cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
-    .dashboard-cards {
-      display: flex;
-      gap: 28px;
-      margin: 36px 36px 0 36px;
+
+    .topbar .profile:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
     }
-    .card {
-      flex: 1;
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-      padding: 28px 24px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      min-width: 180px;
-    }
-    .card-title {
-      font-size: 16px;
-      color: #7a4edf;
-      font-weight: 600;
-      margin-bottom: 10px;
-    }
-    .card-value {
-      font-size: 32px;
-      font-weight: 700;
-      color: #222;
-    }
+
     .dashboard-main {
       display: flex;
       flex: 1;
       gap: 32px;
-      margin: 28px 36px 0 36px;
+      padding: 32px 40px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
     }
+
     .activity-table-section {
-      flex: 2;
-      background: #ffffff;
-      border-radius: 14px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-      padding: 24px;
+      flex: 1.5;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 32px;
       display: flex;
       flex-direction: column;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
+
     .activity-table-section h3 {
-      margin: 0 0 18px 0;
-      font-size: 18px;
-      color: #4e73df;
-      font-weight: 600;
+      margin: 0 0 24px 0;
+      font-size: 20px;
+      color: var(--text-primary);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
+
+    .activity-table-section h3::before {
+      content: '📊';
+      font-size: 24px;
+    }
+
+    .activity-table-section .download-btn {
+      align-self: flex-start;
+      margin-bottom: 20px;
+      padding: 12px 24px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .activity-table-section .download-btn::before {
+      content: '📥';
+      font-size: 16px;
+    }
+
+    .activity-table-section .download-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    }
+
     table.activity-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 15px;
+      font-size: 14px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
-    table.activity-table th, table.activity-table td {
-      padding: 10px 8px;
-      text-align: left;
+
+    table.activity-table thead {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
     }
+
     table.activity-table th {
-      color: #7a4edf;
+      padding: 16px 12px;
+      text-align: left;
       font-weight: 600;
-      border-bottom: 2px solid #e0e0e0;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+
     table.activity-table td {
-      border-bottom: 1px solid #f0f0f0;
+      padding: 14px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.2s ease;
     }
+
+    table.activity-table tbody tr:hover {
+      background: #f8fafc;
+    }
+
     .status-pass {
-      color: green;
+      color: var(--accent);
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
+
     .status-fail {
-      color: red;
+      color: var(--danger);
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
+
+    .status-pass::before, .status-fail::before {
+      font-size: 14px;
+    }
+
     .side-panel {
       flex: 1;
       display: flex;
       flex-direction: column;
       gap: 24px;
     }
+
     .camera-feed-box {
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-      padding: 18px;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 32px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    .camera-feed-box video, .camera-feed-box img {
-      width: 100%;
-      max-width: 280px;
-      border-radius: 10px;
-      border: 2px solid #4e73df;
-      margin-bottom: 12px;
-      position: relative;
-    }
-    .detection-box {
-      position: absolute;
-      border: 2px solid #27ae60;
-      border-radius: 6px;
-      pointer-events: none;
-    }
-    .info-panel {
-      background: #f4f6fc;
-      border-radius: 10px;
-      padding: 14px 18px;
-      width: 100%;
-      margin-top: 8px;
-      font-size: 15px;
-      color: #222;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-    }
-    .info-panel .info-label {
-      color: #7a4edf;
+
+    .camera-feed-box h4 {
+      margin: 0 0 20px 0;
+      font-size: 18px;
+      color: var(--text-primary);
       font-weight: 600;
-      margin-right: 6px;
-    }
-    .bottom-status {
-      margin: 32px 36px 24px 36px;
       display: flex;
-      gap: 32px;
-      font-size: 15px;
-      color: #222;
+      align-items: center;
+      gap: 10px;
     }
-    .bottom-status .status-label {
-      color: #4e73df;
-      font-weight: 600;
-      margin-right: 8px;
+
+    .camera-feed-box h4::before {
+      content: '📹';
+      font-size: 20px;
     }
+
+    .camera-feed-box video {
+      width: 100%;
+      max-width: 320px;
+      border-radius: 16px;
+      border: 3px solid var(--primary);
+      margin-bottom: 16px;
+      position: relative;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+    }
+
+    .camera-feed-box .button-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
     .camera-feed-box button {
       font-family: 'Poppins', sans-serif;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
-      padding: 9px 22px;
-      border-radius: 7px;
+      padding: 12px 20px;
+      border-radius: 12px;
       border: none;
       outline: none;
-      background: #7a4edf;
-      color: #fff;
       cursor: pointer;
-      box-shadow: 0 2px 8px rgba(122, 78, 223, 0.10);
-      transition: background 0.18s, box-shadow 0.18s, color 0.18s;
-      margin-bottom: 2px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .camera-feed-box button:hover, .camera-feed-box button:focus {
-      background: #4e73df;
-      color: #fff;
-      box-shadow: 0 4px 16px rgba(78, 115, 223, 0.13);
+
+    .camera-feed-box button.primary {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
-    #toggle-camera-btn {
-      background: #e0e0e0;
-      color: #7a4edf;
-      margin-left: 10px;
+
+    .camera-feed-box button.primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
     }
-    #toggle-camera-btn:hover, #toggle-camera-btn:focus {
-      background: #7a4edf;
-      color: #fff;
+
+    .camera-feed-box button.secondary {
+      background: #e2e8f0;
+      color: var(--text-secondary);
+      border: 2px solid #cbd5e1;
     }
+
+    .camera-feed-box button.secondary:hover {
+      background: #f1f5f9;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    #verify-status {
+      margin-top: 16px;
+      font-weight: 600;
+      font-size: 16px;
+      text-align: center;
+      padding: 12px 16px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      min-height: 20px;
+    }
+
+    #verify-status.verifying {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      color: #92400e;
+      border: 1px solid #f59e0b;
+    }
+
+    #verify-status.success {
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      color: #065f46;
+      border: 1px solid var(--accent);
+    }
+
+    #verify-status.error {
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      color: #991b1b;
+      border: 1px solid var(--danger);
+    }
+
+    #verify-status.info {
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      color: #1e40af;
+      border: 1px solid #3b82f6;
+    }
+
+    .info-panel {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 24px;
+      width: 100%;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: var(--shadow);
+    }
+
+    .info-panel h4 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      color: var(--text-primary);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-panel h4::before {
+      content: 'ℹ️';
+      font-size: 18px;
+    }
+
+    .info-panel .info-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .info-panel .info-item:last-child {
+      border-bottom: none;
+    }
+
+    .info-panel .info-label {
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .info-panel .info-value {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
     @media (max-width: 1200px) {
-      .dashboard-main { flex-direction: column; }
-      .side-panel { flex-direction: row; }
+      .dashboard-main {
+        flex-direction: column;
+        padding: 24px 20px;
+      }
+      .activity-table-section {
+        order: 2;
+      }
+      .side-panel {
+        order: 1;
+      }
     }
-    @media (max-width: 900px) {
-      .dashboard-cards, .dashboard-main, .bottom-status { flex-direction: column; gap: 18px; }
-      .main-content { padding: 0; }
+
+    @media (max-width: 768px) {
+      .topbar {
+        padding: 16px 20px;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .topbar .datetime {
+        order: 3;
+        margin-left: 0;
+      }
+      .dashboard-main {
+        padding: 16px 10px;
+      }
+      .activity-table-section, .camera-feed-box, .info-panel {
+        padding: 20px;
+      }
+      .camera-feed-box .button-group {
+        flex-direction: column;
+      }
+      table.activity-table {
+        font-size: 12px;
+      }
+      table.activity-table th, table.activity-table td {
+        padding: 8px 6px;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .activity-table tbody tr {
+      animation: fadeIn 0.3s ease;
+    }
+
+    /* Animated Background Orbs */
+    .orb {
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      filter: blur(70px);
+      animation: float 8s infinite alternate ease-in-out;
+      z-index: -1;
+    }
+    .orb1 { background: rgba(130,180,255,0.55); top: -60px; left: -40px; }
+    .orb2 { background: rgba(190,225,255,0.45); bottom: -70px; right: -50px; animation-duration: 10s; }
+    .orb3 { background: rgba(160,200,255,0.35); top: 60%; left: -60px; animation-duration: 13s; }
+
+    @keyframes float {
+      0% { transform: translateY(0) translateX(0); }
+      100% { transform: translateY(50px) translateX(50px); }
     }
   </style>
 </head>
 <body>
+  <!-- Animated Background Orbs -->
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
   <div class="main-content">
     <div class="topbar">
       <div class="title">
@@ -238,6 +498,7 @@
     <div class="dashboard-main">
       <div class="activity-table-section">
         <h3>Recent Activity</h3>
+        <button class="download-btn" id="download-btn">Download Report</button>
         <table class="activity-table">
           <thead>
             <tr>
@@ -256,15 +517,17 @@
       </div>
       <div class="side-panel">
         <div class="camera-feed-box">
-          <video id="video" autoplay style="background:#c6d1f3; border:2px solid #27ae60; border-radius:10px; width:100%; max-width:280px;"></video>
+          <h4>Live Camera Feed</h4>
+          <video id="video" autoplay></video>
           <canvas id="canvas" style="display:none;"></canvas>
-          <div style="margin-top:12px;">
-            <button id="verify-btn">Capture &amp; Verify</button>
-            <button id="toggle-camera-btn" style="margin-left:10px;">Turn Off Camera</button>
+          <div class="button-group">
+            <button id="verify-btn" class="primary">📸 Capture & Verify</button>
+            <button id="toggle-camera-btn" class="secondary">📷 Turn Off Camera</button>
           </div>
-          <div id="verify-status" style="margin-top:10px; font-weight:600;"></div>
+          <div id="verify-status"></div>
         </div>
         <div class="info-panel">
+          <h4>Student Information</h4>
           <!-- This will be replaced by JS -->
         </div>
       </div>
@@ -353,51 +616,87 @@
         })
         .then(res => res.json())
         .then(data => {
-          if (data.status === 'allowed' || data.status === 'no_outpass') {
+          let actionText = 'Verification';
+          let statusClass = 'status-fail';
+          let statusText = '❌ Failed';
+          let name = data.outpass ? data.outpass.student_name : '';
+
+          if (data.status === 'allowed') {
             // Fetch user info from backend
             fetch('/get-user-info', {
               method: 'POST',
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({ r_no: data.reg_number })
             })
-            .then(res => res.json())
-            .then(info => {
-              console.log(info); // For debugging
-              const infoPanel = document.querySelector('.info-panel');
-              let allowedStatus = (info.allowed === undefined || info.allowed)
-                ? `<span style="color:green;font-weight:600;">Allowed</span>`
-                : `<span style="color:red;font-weight:600;">Not Allowed</span>`;
-              infoPanel.innerHTML = `
-                <div><span class="info-label">Name:</span> ${info.name}</div>
-                <div><span class="info-label">Reg. No.:</span> ${info.reg_number}</div>
-                <div><span class="info-label">Leave Time:</span> ${info.leave_time}</div>
-                <div><span class="info-label">Return Time:</span> ${info.return_time}</div>
-                <div><span class="info-label">Reason:</span> ${info.reason}</div>
-                <div><span class="info-label">Status:</span> ${allowedStatus}</div>
-              `;
-            });
-            // Show status as before
-            if (data.status === 'allowed') {
-              statusDiv.style.color = 'green';
-              statusDiv.textContent = `Allowed: ${data.roll_number}`;
-            } else if (data.status === 'no_outpass') {
-              statusDiv.style.color = 'orange';
-              statusDiv.textContent = `No approved outpass for ${data.roll_number}`;
-              document.querySelector('.info-panel').innerHTML = ''; // <-- Clear info panel
-            }
+        .then(res => res.json())
+        .then(info => {
+          console.log(info); // For debugging
+          const infoPanel = document.querySelector('.info-panel');
+          let allowedStatus = (info.allowed === undefined || info.allowed)
+            ? `<span style="color:#10b981;font-weight:600;">Allowed</span>`
+            : `<span style="color:#ef4444;font-weight:600;">Not Allowed</span>`;
+          infoPanel.innerHTML = `
+            <h4>Student Information</h4>
+            <div class="info-item">
+              <span class="info-label">Name:</span>
+              <span class="info-value">${info.name}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Reg. No.:</span>
+              <span class="info-value">${info.reg_number}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Leave Time:</span>
+              <span class="info-value">${info.leave_time}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Return Time:</span>
+              <span class="info-value">${info.return_time}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Reason:</span>
+              <span class="info-value">${info.reason}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Status:</span>
+              <span class="info-value">${allowedStatus}</span>
+            </div>
+          `;
+          name = info.name; // Update name
+        });
+            // Show status
+            statusDiv.style.color = 'green';
+            statusDiv.textContent = `Allowed: ${data.reg_number}`;
+            actionText = 'Verified';
+            statusClass = 'status-pass';
+            statusText = '✅ Passed';
+          } else if (data.status === 'no_outpass') {
+            statusDiv.style.color = 'orange';
+            statusDiv.textContent = `No approved outpass found`;
+            document.querySelector('.info-panel').innerHTML = ''; // Clear info panel
+            statusText = '❌ No Outpass';
           } else if (data.status === 'choose_action') {
             statusDiv.style.color = '#4e73df';
-            statusDiv.innerHTML = `
-              ${data.message}<br>
-              <button id="entry-btn" style="margin:8px 8px 0 0;">Entry</button>
-              <button id="exit-btn" style="margin:8px 0 0 0;">Exit</button>
-            `;
-            document.getElementById('entry-btn').onclick = function() {
-              recordAction('Entry', data.reg_number);
-            };
-            document.getElementById('exit-btn').onclick = function() {
-              recordAction('Exit', data.reg_number);
-            };
+            let buttonsHtml = '';
+            if (data.actions.includes('Entry')) {
+              buttonsHtml += '<button id="entry-btn" style="margin:8px 8px 0 0;">Entry</button>';
+            }
+            if (data.actions.includes('Exit')) {
+              buttonsHtml += '<button id="exit-btn" style="margin:8px 0 0 0;">Exit</button>';
+            }
+            statusDiv.innerHTML = `${data.message}<br>${buttonsHtml}`;
+            if (data.actions.includes('Entry')) {
+              document.getElementById('entry-btn').onclick = function() {
+                recordAction('Entry', data.reg_number);
+              };
+            }
+            if (data.actions.includes('Exit')) {
+              document.getElementById('exit-btn').onclick = function() {
+                recordAction('Exit', data.reg_number);
+              };
+            }
+            // Don't log verification for choose_action, only log the action
+            return;
           } else if (data.status === 'error') {
             statusDiv.style.color = 'red';
             statusDiv.textContent = data.message;
@@ -406,6 +705,23 @@
             statusDiv.style.color = 'red';
             statusDiv.textContent = data.message || 'Not recognized';
             document.querySelector('.info-panel').innerHTML = '';
+          }
+
+          // Add to Recent Activity Table
+          const tbody = document.getElementById('activity-table-body');
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${new Date().toLocaleString()}</td>
+            <td>${data.reg_number || ''}</td>
+            <td>${name}</td>
+            <td>${actionText}</td>
+            <td class="${statusClass}">${statusText}</td>
+          `;
+          // Add new row at the top
+          if (tbody.firstChild) {
+            tbody.insertBefore(tr, tbody.firstChild);
+          } else {
+            tbody.appendChild(tr);
           }
         })
         .catch(() => {
@@ -433,11 +749,27 @@
         const infoPanel = document.querySelector('.info-panel');
         if (resp.status === 'success') {
           infoPanel.innerHTML = `
-            <div><span class="info-label">Name:</span> ${resp.name || ''}</div>
-            <div><span class="info-label">Roll No.:</span> ${resp.roll_number || ''}</div>
-            <div><span class="info-label">Leave Time:</span> ${resp.leave_time || ''}</div>
-            <div><span class="info-label">Return Time:</span> ${resp.return_time || ''}</div>
-            <div><span class="info-label">Action Time:</span> ${resp.action_time || ''}</div>
+            <h4>Student Information</h4>
+            <div class="info-item">
+              <span class="info-label">Name:</span>
+              <span class="info-value">${resp.name || ''}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Roll No.:</span>
+              <span class="info-value">${resp.roll_number || ''}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Leave Time:</span>
+              <span class="info-value">${resp.leave_time || ''}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Return Time:</span>
+              <span class="info-value">${resp.return_time || ''}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Action Time:</span>
+              <span class="info-value">${resp.action_time || ''}</span>
+            </div>
           `;
           // --- Add to Recent Activity Table ---
           const tbody = document.getElementById('activity-table-body');
@@ -472,17 +804,73 @@
           });
           html += `<div><span class="info-label">Action Time:</span> ${resp.action_time}</div>`;
           infoPanel.innerHTML = html;
-        } else if (resp.status === 'error') {
-          infoPanel.innerHTML = `
-            <div><span class="info-label">Name:</span> ${resp.name || ''}</div>
-            <div><span class="info-label">Roll No.:</span> ${resp.roll_number || ''}</div>
-            <div><span class="info-label">Leave Time:</span> ${resp.leave_time || ''}</div>
-            <div><span class="info-label">Return Time:</span> ${resp.return_time || ''}</div>
-            <div><span class="info-label">Action Time:</span> ${resp.action_time || ''}</div>
+          // Add to Recent Activity Table
+          const tbody = document.getElementById('activity-table-body');
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${new Date().toLocaleString()}</td>
+            <td>${reg_number || ''}</td>
+            <td></td>
+            <td>${action}</td>
+            <td class="status-fail">❌ Invalid Time</td>
           `;
+          // Add new row at the top
+          if (tbody.firstChild) {
+            tbody.insertBefore(tr, tbody.firstChild);
+          } else {
+            tbody.appendChild(tr);
+          }
+        } else if (resp.status === 'error') {
+          if (resp.message === 'No outpass found.') {
+            infoPanel.innerHTML = '';
+            // Add to Recent Activity Table
+            const tbody = document.getElementById('activity-table-body');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${new Date().toLocaleString()}</td>
+              <td>${reg_number || ''}</td>
+              <td></td>
+              <td>${action}</td>
+              <td class="status-fail">❌ No outpass found for specific timing</td>
+            `;
+            // Add new row at the top
+            if (tbody.firstChild) {
+              tbody.insertBefore(tr, tbody.firstChild);
+            } else {
+              tbody.appendChild(tr);
+            }
+          } else {
+            infoPanel.innerHTML = `
+              <div><span class="info-label">Name:</span> ${resp.name || ''}</div>
+              <div><span class="info-label">Roll No.:</span> ${resp.roll_number || ''}</div>
+              <div><span class="info-label">Leave Time:</span> ${resp.leave_time || ''}</div>
+              <div><span class="info-label">Return Time:</span> ${resp.return_time || ''}</div>
+              <div><span class="info-label">Action Time:</span> ${resp.action_time || ''}</div>
+            `;
+          }
         }
       });
     }
+
+    // Download report function
+    document.getElementById('download-btn').onclick = function() {
+      const table = document.querySelector('.activity-table');
+      let csv = '';
+      for (let row of table.rows) {
+        let rowData = [];
+        for (let cell of row.cells) {
+          rowData.push('"' + cell.textContent.replace(/"/g, '""') + '"');
+        }
+        csv += rowData.join(',') + '\n';
+      }
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'activity_report.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
   </script>
 </body>
 </html>
